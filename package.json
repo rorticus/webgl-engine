@@ -1,0 +1,26 @@
+{
+  "name": "webgl-engine",
+  "version": "1.0.0",
+  "description": "WebGL game engine for creating TypeScript games",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rorticus/webgl-engine.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rorticus/webgl-engine/issues"
+  },
+  "homepage": "https://github.com/rorticus/webgl-engine#readme",
+  "devDependencies": {
+    "prettier": "^2.0.5",
+    "typescript": "^3.8.3"
+  }
+}
