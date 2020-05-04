@@ -56,6 +56,8 @@ export class Engine {
         if(this._paused) {
             return;
         }
+
+        this._gameObjects.forEach(go => go.update(deltaInSeconds));
     }
 
     addGameObject(go: GameObject) {
