@@ -1,12 +1,14 @@
 import {GameObject} from "./GameObject";
+import {Scene} from "./Scene";
 
 export class Engine {
     private _canvas: HTMLCanvasElement;
-    private _gameObjects: GameObject[];
     private _paused: boolean;
     private _lastFrameTime: number;
     private _gdt: number;
     private _step: number;
+    private _scene: Scene;
+    private _gl: WebGLRenderingContext;
 
     set fps(value: number) {
         this._step = 1 / value;
@@ -15,11 +17,29 @@ export class Engine {
     constructor(canvas: HTMLCanvasElement) {
         this._canvas = canvas;
 
-        this._gameObjects = [];
+        const names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+
+        let gl: WebGLRenderingContext = null;
+
+        for (let i = 0; i < names.length; i++) {
+            try {
+                gl = canvas.getContext(names[i]) as WebGLRenderingContext;
+                break;
+            } catch (e) {}
+        }
+
+        if (gl === null) {
+            throw new Error("Failed to initialize webgl");
+        }
+
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+        this._gl = gl;
         this._paused = true;
         this._lastFrameTime = 0;
         this._gdt = 0;
         this.fps = 30;
+        this._scene = new Scene();
 
         const frame = () => {
             const now = Date.now();
@@ -57,21 +77,18 @@ export class Engine {
             return;
         }
 
-        this._gameObjects.forEach(go => go.update(deltaInSeconds));
-    }
-
-    addGameObject(go: GameObject) {
-        this._gameObjects.push(go);
-    }
-
-    removeGameObject(go: GameObject) {
-        const index = this._gameObjects.indexOf(go);
-
-        if(index >= 0) {
-            this._gameObjects.splice(index, 1);
-        }
+        this._scene.update(deltaInSeconds);
     }
 
     render() {
+        const viewportWidth = this._canvas.width;
+        const viewportHeight = this._canvas.height;
+
+        const gl = this._gl;
+
+        gl.clearColor(0, 0, 0, 1);
+        gl.enable(gl.DEPTH_TEST);
+
+        this._scene.render(viewportWidth, viewportHeight, gl);
     }
 }

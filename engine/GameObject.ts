@@ -185,4 +185,7 @@ export class GameObject {
 		this.updateMatrixWorld();
 		this.components.forEach((component) => component.update(deltaInSeconds));
 	}
+
+	render(gl: WebGLRenderingContext) {
+	}
 }
