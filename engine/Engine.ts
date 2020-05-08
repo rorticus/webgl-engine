@@ -14,6 +14,10 @@ export class Engine {
         this._step = 1 / value;
     }
 
+    set scene(value: Scene) {
+        this._scene = value;
+    }
+
     constructor(canvas: HTMLCanvasElement) {
         this._canvas = canvas;
 

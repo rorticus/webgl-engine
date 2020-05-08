@@ -1,8 +1,11 @@
-import {Material} from "./Material";
+import {Material, MaterialRenderingContext} from "./Material";
+import { Light } from "../../Light";
+import { Lights } from "../../Lights";
+import { GlBuffer } from "../Renderable";
 
 const vertexShaderSource = this.createShader(
-    "x-shader/x-vertex",
-    `
+	"x-shader/x-vertex",
+	`
 	const int MAX_BONES = 100;
 	uniform bool useSkinning;
 	uniform mat4 boneGlobalMatrices[MAX_BONES];
@@ -62,8 +65,8 @@ const vertexShaderSource = this.createShader(
 		`
 );
 const fragmentShaderSource = this.createShader(
-    "x-shader/x-fragment",
-    `
+	"x-shader/x-fragment",
+	`
 		    precision mediump float;
     varying vec3 transformedNormal;
     varying vec3 vertexPos;
@@ -135,110 +138,178 @@ const fragmentShaderSource = this.createShader(
 );
 
 export class TexturedLightingMaterial extends Material {
-    private vertexPositionAttribute: number;
-    private pMatrixUniform: WebGLUniformLocation;
-    private mvMatrixUniform: WebGLUniformLocation;
-    private nMatrixUniform: WebGLUniformLocation;
-    private materialDiffuseColor: WebGLUniformLocation;
-    private materialSpecularColor: WebGLUniformLocation;
-    private materialAmbientColor: WebGLUniformLocation;
-    private uAmbientColor: WebGLUniformLocation;
-    private uLightPosition: WebGLUniformLocation;
-    private directionalColorUniform: WebGLUniformLocation;
-    private specularColorUniform: WebGLUniformLocation;
-    private uLightDirection: WebGLUniformLocation;
-    private uPositionalDiffuseColor: WebGLUniformLocation;
-    private uPositionalSpecularColor: WebGLUniformLocation;
-    private uDirectionalDiffuseColor: WebGLUniformLocation;
-    private uDirectionalSpecularColor: WebGLUniformLocation;
-    private uSampler: WebGLUniformLocation;
-    private aTextureCoord: GLint;
-    private skinIndex: GLint;
-    private skinWeight: GLint;
-    private useSkinning: WebGLUniformLocation;
-    private boneGlobalMatrices: WebGLUniformLocation;
-    private vertexNormalAttribute: GLint;
+	private vertexPositionAttribute: number;
+	private materialDiffuseColor: WebGLUniformLocation;
+	private materialSpecularColor: WebGLUniformLocation;
+	private materialAmbientColor: WebGLUniformLocation;
+	private uAmbientColor: WebGLUniformLocation;
+	private uLightPosition: WebGLUniformLocation;
+	private directionalColorUniform: WebGLUniformLocation;
+	private specularColorUniform: WebGLUniformLocation;
+	private uLightDirection: WebGLUniformLocation;
+	private uPositionalDiffuseColor: WebGLUniformLocation;
+	private uPositionalSpecularColor: WebGLUniformLocation;
+	private uDirectionalDiffuseColor: WebGLUniformLocation;
+	private uDirectionalSpecularColor: WebGLUniformLocation;
+	private uSampler: WebGLUniformLocation;
+	private aTextureCoord: GLint;
+	private skinIndex: GLint;
+	private skinWeight: GLint;
+	private useSkinning: WebGLUniformLocation;
+	private boneGlobalMatrices: WebGLUniformLocation;
+	private vertexNormalAttribute: GLint;
 
-    constructor(gl: WebGLRenderingContext) {
-        super();
+	constructor(gl: WebGLRenderingContext) {
+		super();
 
-        const fragmentShader = this.createShader(gl, "x-shader/x-fragment", fragmentShaderSource);
-        const vertexShader = this.createShader(gl, "x-shader/x-vertex", vertexShaderSource);
+		const fragmentShader = this.createShader(
+			gl,
+			"x-shader/x-fragment",
+			fragmentShaderSource
+		);
+		const vertexShader = this.createShader(
+			gl,
+			"x-shader/x-vertex",
+			vertexShaderSource
+		);
 
-        const shaderProgram = gl.createProgram();
-        gl.attachShader(shaderProgram, vertexShader);
-        gl.attachShader(shaderProgram, fragmentShader);
-        gl.linkProgram(shaderProgram);
+		const shaderProgram = gl.createProgram();
+		gl.attachShader(shaderProgram, vertexShader);
+		gl.attachShader(shaderProgram, fragmentShader);
+		gl.linkProgram(shaderProgram);
 
-        this._shaderProgram = shaderProgram;
+		this._shaderProgram = shaderProgram;
 
-        this.vertexPositionAttribute = gl.getAttribLocation(
-            shaderProgram,
-            "aVertexPosition"
-        );
-        gl.enableVertexAttribArray(this.vertexPositionAttribute);
+		this.vertexPositionAttribute = gl.getAttribLocation(
+			shaderProgram,
+			"aVertexPosition"
+		);
+		gl.enableVertexAttribArray(this.vertexPositionAttribute);
 
-        this.vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aVertexNormal");
-        gl.enableVertexAttribArray(this.vertexNormalAttribute);
+		this.vertexNormalAttribute = gl.getAttribLocation(
+			shaderProgram,
+			"aVertexNormal"
+		);
+		gl.enableVertexAttribArray(this.vertexNormalAttribute);
 
-        this.aTextureCoord = gl.getAttribLocation(shaderProgram, "aTextureCoord");
-        gl.enableVertexAttribArray(this.aTextureCoord);
+		this.aTextureCoord = gl.getAttribLocation(shaderProgram, "aTextureCoord");
+		gl.enableVertexAttribArray(this.aTextureCoord);
 
-        this.pMatrixUniform = gl.getUniformLocation(shaderProgram, "pMatrix");
-        this.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "mvMatrix");
-        this.nMatrixUniform = gl.getUniformLocation(shaderProgram, "nMatrix");
-        this.materialDiffuseColor = gl.getUniformLocation(
-            shaderProgram,
-            "materialDiffuseColor"
-        );
-        this.materialSpecularColor = gl.getUniformLocation(
-            shaderProgram,
-            "materialSpecularColor"
-        );
-        this.materialAmbientColor = gl.getUniformLocation(
-            shaderProgram,
-            "materialAmbientColor"
-        );
+		this.pMatrixUniform = gl.getUniformLocation(shaderProgram, "pMatrix");
+		this.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "mvMatrix");
+		this.nMatrixUniform = gl.getUniformLocation(shaderProgram, "nMatrix");
+		this.materialDiffuseColor = gl.getUniformLocation(
+			shaderProgram,
+			"materialDiffuseColor"
+		);
+		this.materialSpecularColor = gl.getUniformLocation(
+			shaderProgram,
+			"materialSpecularColor"
+		);
+		this.materialAmbientColor = gl.getUniformLocation(
+			shaderProgram,
+			"materialAmbientColor"
+		);
 
-        this.uAmbientColor = gl.getUniformLocation(shaderProgram, "uAmbientColor");
-        this.uLightDirection = gl.getUniformLocation(
-            shaderProgram,
-            "uLightDirection"
-        );
-        this.uPositionalDiffuseColor = gl.getUniformLocation(
-            shaderProgram,
-            "uPositionalDiffuseColor"
-        );
-        this.uPositionalSpecularColor = gl.getUniformLocation(
-            shaderProgram,
-            "uPositionalSpecularColor"
-        );
-        this.uDirectionalDiffuseColor = gl.getUniformLocation(
-            shaderProgram,
-            "uDirectionalDiffuseColor"
-        );
-        this.uDirectionalSpecularColor = gl.getUniformLocation(
-            shaderProgram,
-            "uDirectionalSpecularColor"
-        );
+		this.uAmbientColor = gl.getUniformLocation(shaderProgram, "uAmbientColor");
+		this.uLightDirection = gl.getUniformLocation(
+			shaderProgram,
+			"uLightDirection"
+		);
+		this.uPositionalDiffuseColor = gl.getUniformLocation(
+			shaderProgram,
+			"uPositionalDiffuseColor"
+		);
+		this.uPositionalSpecularColor = gl.getUniformLocation(
+			shaderProgram,
+			"uPositionalSpecularColor"
+		);
+		this.uDirectionalDiffuseColor = gl.getUniformLocation(
+			shaderProgram,
+			"uDirectionalDiffuseColor"
+		);
+		this.uDirectionalSpecularColor = gl.getUniformLocation(
+			shaderProgram,
+			"uDirectionalSpecularColor"
+		);
 
-        this.uLightPosition = gl.getUniformLocation(
-            shaderProgram,
-            "uLightPosition"
-        );
+		this.uLightPosition = gl.getUniformLocation(
+			shaderProgram,
+			"uLightPosition"
+		);
 
-        this.uSampler = gl.getUniformLocation(shaderProgram, "uSampler");
+		this.uSampler = gl.getUniformLocation(shaderProgram, "uSampler");
 
-        this.skinIndex = gl.getAttribLocation(shaderProgram, "skinIndex");
-        this.skinWeight = gl.getAttribLocation(shaderProgram, "skinWeight");
-        this.useSkinning = gl.getUniformLocation(shaderProgram, "useSkinning");
-        this.boneGlobalMatrices = gl.getUniformLocation(
-            shaderProgram,
-            "boneGlobalMatrices"
-        );
-    }
+		this.skinIndex = gl.getAttribLocation(shaderProgram, "skinIndex");
+		this.skinWeight = gl.getAttribLocation(shaderProgram, "skinWeight");
+		this.useSkinning = gl.getUniformLocation(shaderProgram, "useSkinning");
+		this.boneGlobalMatrices = gl.getUniformLocation(
+			shaderProgram,
+			"boneGlobalMatrices"
+		);
+	}
 
-    setup(gl: WebGLRenderingContext) {
-        gl.useProgram(this._shaderProgram);
+	setup(gl: WebGLRenderingContext) {
+		gl.useProgram(this._shaderProgram);
+
+		const l1 = new Light();
+		l1.ambientColor = [0.1, 0.1, 0.1];
+		l1.diffuseColor = [0.5, 0.5, 0.5];
+		l1.specularColor = [1, 1, 1];
+		l1.direction = [0, -1.25, -1.25];
+
+		const l2 = new Light();
+		l2.diffuseColor = [1, 1, 1];
+		l2.specularColor = [0, 0, 0];
+		l2.position = [0, 0, -10];
+
+		const l3 = new Light();
+		l3.diffuseColor = [1, 1, 1];
+		l3.specularColor = [0, 0, 0];
+		l3.position = [20, 5, 200];
+
+		const lights = new Lights();
+		lights.addLight(l1);
+		lights.addLight(l2);
+		lights.addLight(l3);
+
+		gl.uniform3fv(this.uAmbientColor, lights.getDataByType("ambientColor"));
+		gl.uniform3fv(
+			this.uDirectionalDiffuseColor,
+			lights.getDataByType("diffuseColor", "direction")
+		);
+		gl.uniform3fv(
+			this.uDirectionalSpecularColor,
+			lights.getDataByType("specularColor", "direction")
+		);
+		gl.uniform3fv(
+			this.uPositionalDiffuseColor,
+			lights.getDataByType("diffuseColor", "position")
+		);
+		gl.uniform3fv(
+			this.uPositionalSpecularColor,
+			lights.getDataByType("specularColor", "position")
+		);
+		gl.uniform3fv(this.uLightPosition, lights.getDataByType("position"));
+		gl.uniform3fv(this.uLightDirection, lights.getDataByType("direction"));
+	}
+
+	render(
+	    gl: WebGLRenderingContext,
+        context: MaterialRenderingContext
+	) {
+		super.render(gl, context);
+
+		// material color
+		gl.uniform3f(this.materialDiffuseColor, context.diffuseColor[0], context.diffuseColor[1], context.diffuseColor[2]);
+		gl.uniform3f(this.materialAmbientColor, context.ambientColor[0], context.ambientColor[1], context.ambientColor[2]);
+		gl.uniform3f(this.materialSpecularColor, context.specularColor[0], context.specularColor[1], context.specularColor[2]);
+
+		// normal buffer
+		gl.bindBuffer(gl.ARRAY_BUFFER, context.normalBuffer.buffer);
+		gl.vertexAttribPointer(this.vertexNormalAttribute, context.normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		// texture buffer
+		gl.bindBuffer(gl.ARRAY_BUFFER, context.textureBuffer.buffer);
     }
 }
