@@ -1,6 +1,7 @@
 import { mat3, mat4, quat, vec3 } from "gl-matrix";
 import { GameComponent } from "./components/GameComponent";
-import { Renderable } from "./renderable/Renderable";
+import {setBuffersAndAttributes, setUniforms} from "./webgl/utils";
+import {Renderable} from "./webgl/interfaces";
 
 export class GameObject {
 	id: string;
@@ -10,14 +11,15 @@ export class GameObject {
 	components: GameComponent[];
 	renderable?: Renderable;
 
+	// transformation
 	up: vec3;
 	position: vec3;
 	rotation: quat;
 	scale: vec3;
-	modelMatrix: mat4;
-	matrixWorld: mat4;
 
-	matrixWorldNeedsUpdate: boolean;
+	// transformation as matrices
+	localMatrix: mat4;
+	worldMatrix: mat4;
 
 	constructor() {
 		this.parent = null;
@@ -29,10 +31,8 @@ export class GameObject {
 		this.position = vec3.fromValues(0, 0, 0);
 		this.rotation = quat.create();
 		this.scale = vec3.fromValues(1, 1, 1);
-		this.modelMatrix = mat4.create();
-		this.matrixWorld = mat4.create();
-
-		this.matrixWorldNeedsUpdate = true;
+		this.localMatrix = mat4.create();
+		this.worldMatrix = mat4.create();
 	}
 
 	addComponent(component: GameComponent) {
@@ -83,7 +83,7 @@ export class GameObject {
 
 	localToWorld(vector: vec3) {
 		const v1 = vec3.create();
-		vec3.transformMat4(v1, vector, this.matrixWorld);
+		vec3.transformMat4(v1, vector, this.worldMatrix);
 
 		return v1;
 	}
@@ -92,7 +92,7 @@ export class GameObject {
 		const m1 = mat4.create();
 
 		return (vector: vec3) => {
-			mat4.invert(m1, this.matrixWorld);
+			mat4.invert(m1, this.worldMatrix);
 			const v1 = vec3.create();
 			vec3.transformMat4(v1, vector, m1);
 			return v1;
@@ -152,40 +152,39 @@ export class GameObject {
 	}
 
 	updateMatrix() {
-		mat4.identity(this.modelMatrix);
-		mat4.fromQuat(this.modelMatrix, this.rotation);
-		mat4.scale(this.modelMatrix, this.modelMatrix, this.scale);
+		mat4.identity(this.localMatrix);
+		mat4.fromQuat(this.localMatrix, this.rotation);
+		mat4.scale(this.localMatrix, this.localMatrix, this.scale);
 
-		this.modelMatrix[12] = this.position[0];
-		this.modelMatrix[13] = this.position[1];
-		this.modelMatrix[14] = this.position[2];
-
-		this.matrixWorldNeedsUpdate = true;
+		this.localMatrix[12] = this.position[0];
+		this.localMatrix[13] = this.position[1];
+		this.localMatrix[14] = this.position[2];
 	}
 
-	updateMatrixWorld(force = false) {
+	computeWorldMatrix() {
 		this.updateMatrix();
 
-		let forceUpdate = force;
-
-		if (this.matrixWorldNeedsUpdate || force) {
-			if (!this.parent) {
-				mat4.copy(this.matrixWorld, this.modelMatrix);
-			} else {
-				mat4.mul(this.matrixWorld, this.parent.matrixWorld, this.modelMatrix);
-			}
-
-			forceUpdate = true;
+		if (!this.parent) {
+			mat4.copy(this.worldMatrix, this.localMatrix);
+		} else {
+			mat4.mul(this.worldMatrix, this.parent.worldMatrix, this.localMatrix);
 		}
 
-		this.children.forEach((child) => child.updateMatrixWorld(forceUpdate));
+		this.children.forEach((child) => child.computeWorldMatrix());
 	}
 
 	update(deltaInSeconds: number) {
-		this.updateMatrixWorld();
+		this.computeWorldMatrix();
 		this.components.forEach((component) => component.update(deltaInSeconds));
 	}
 
 	render(gl: WebGLRenderingContext) {
+		if(this.renderable) {
+			gl.useProgram(this.renderable.programInfo.program);
+			setBuffersAndAttributes(gl, this.renderable.programInfo, this.renderable.bufferInfo);
+			setUniforms(this.renderable.programInfo.uniformSetters, this.renderable.uniforms);
+
+			gl.drawElements(gl.TRIANGLES, this.renderable.bufferInfo.numElements || 0, gl.INT, 0);
+		}
 	}
 }

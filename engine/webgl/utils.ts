@@ -1,0 +1,210 @@
+import {
+	AttribSetter,
+	BufferInfo,
+	GlBuffer,
+	ProgramInfo,
+	Renderable,
+	UniformSetter,
+} from "./interfaces";
+
+function isBuiltIn(info: WebGLActiveInfo) {
+	const name = info.name;
+	return name.indexOf("gl_") === 0 || name.indexOf("webgl_") === 0;
+}
+
+function setterForUniform(
+	gl: WebGLRenderingContext,
+	info: WebGLActiveInfo,
+	location: WebGLUniformLocation
+) {
+	switch (info.type) {
+		case gl.FLOAT:
+			return (v: number) => {
+				gl.uniform1f(location, v);
+			};
+		case gl.FLOAT_VEC2:
+			return (v: Float32List) => {
+				gl.uniform2fv(location, v);
+			};
+		case gl.FLOAT_VEC3:
+			return (v: Float32List) => {
+				gl.uniform3fv(location, v);
+			};
+		case gl.FLOAT_VEC4:
+			return (v: Float32List) => {
+				gl.uniform4fv(location, v);
+			};
+		case gl.INT:
+		case gl.BOOL:
+			return (v: number) => {
+				gl.uniform1i(location, v);
+			};
+		case gl.INT_VEC2:
+			return (v: Int32List) => {
+				gl.uniform2iv(location, v);
+			};
+		case gl.INT_VEC3:
+			return (v: Int32List) => {
+				gl.uniform3iv(location, v);
+			};
+		case gl.INT_VEC4:
+			return (v: Int32List) => {
+				gl.uniform4iv(location, v);
+			};
+		case gl.FLOAT_MAT2:
+			return (v: Float32List) => {
+				gl.uniformMatrix2fv(location, false, v);
+			};
+		case gl.FLOAT_MAT3:
+			return (v: Float32List) => {
+				gl.uniformMatrix3fv(location, false, v);
+			};
+		case gl.FLOAT_MAT4:
+			return (v: Float32List) => {
+				gl.uniformMatrix4fv(location, false, v);
+			};
+		default:
+			console.error(`Invali uniform type ${info.type}`, info);
+			throw new Error(`Invalid uniform type ${info.type}`);
+	}
+}
+
+function setterForAttrib(
+	gl: WebGLRenderingContext,
+	info: WebGLActiveInfo,
+	location: GLint
+) {
+	switch (info.type) {
+		case gl.FLOAT:
+		case gl.FLOAT_VEC2:
+		case gl.FLOAT_VEC3:
+		case gl.FLOAT_VEC4:
+			return (b: GlBuffer) => {
+				gl.bindBuffer(gl.ARRAY_BUFFER, b.buffer);
+				gl.enableVertexAttribArray(location);
+				gl.vertexAttribPointer(location, b.numItems, gl.FLOAT, false, 0, 0);
+			};
+		case gl.INT:
+		case gl.INT_VEC2:
+		case gl.INT_VEC3:
+		case gl.INT_VEC4:
+			return (b: GlBuffer) => {
+				gl.bindBuffer(gl.ARRAY_BUFFER, b.buffer);
+				gl.enableVertexAttribArray(location);
+				gl.vertexAttribPointer(location, b.numItems, gl.INT, false, 0, 0);
+			};
+		default:
+			console.error(`Invalid attribute type ${info.type}`, info);
+			throw new Error(`Invalid attribute type ${info.type}`);
+	}
+}
+
+export function createUniformSetters(
+	gl: WebGLRenderingContext,
+	program: WebGLProgram
+) {
+	const numUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+
+	let uniforms: Record<string, UniformSetter> = {};
+
+	for (let i = 0; i < numUniforms; i++) {
+		const uniformInfo = gl.getActiveUniform(program, i);
+		if (isBuiltIn(uniformInfo)) {
+			continue;
+		}
+
+		let name = uniformInfo.name;
+		if (name.substr(-3) === "[0]") {
+			name = name.substr(0, name.length - 3);
+		}
+
+		const location = gl.getUniformLocation(program, uniformInfo.name);
+		if (location) {
+			uniforms[name] = {
+				setter: setterForUniform(gl, uniformInfo, location),
+				location,
+				info: uniformInfo,
+			};
+		}
+	}
+
+	return uniforms;
+}
+
+export function createAttributeSetters(
+	gl: WebGLRenderingContext,
+	program: WebGLProgram
+) {
+	const numAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+
+	let attributes: Record<string, AttribSetter> = {};
+
+	for (let i = 0; i < numAttributes; i++) {
+		const attribInfo = gl.getActiveAttrib(program, i);
+		if (isBuiltIn(attribInfo)) {
+			continue;
+		}
+
+		let name = attribInfo.name;
+		if (name.substr(-3) === "[0]") {
+			name = name.substr(0, name.length - 3);
+		}
+
+		const location = gl.getAttribLocation(program, attribInfo.name);
+		if (location) {
+			attributes[name] = {
+				setter: setterForAttrib(gl, attribInfo, location),
+				location,
+				info: attribInfo,
+			};
+		}
+	}
+
+	return attributes;
+}
+
+export function createProgramInfoFromProgram(
+	gl: WebGLRenderingContext,
+	program: WebGLProgram
+): ProgramInfo {
+	return {
+		program,
+		uniformSetters: createUniformSetters(gl, program),
+		attribSetters: createAttributeSetters(gl, program),
+	};
+}
+
+function setAttributes(
+	setters: ProgramInfo["attribSetters"],
+	attribs: BufferInfo["attribs"]
+) {
+	for (let name in attribs) {
+		const setter = setters[name];
+		if (setter) {
+			setter.setter(attribs[name]);
+		}
+	}
+}
+
+export function setBuffersAndAttributes(
+	gl: WebGLRenderingContext,
+	programInfo: ProgramInfo,
+	buffers: BufferInfo
+) {
+	setAttributes(programInfo.attribSetters, buffers.attribs);
+	if (buffers.indices) {
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+	}
+}
+
+export function setUniforms(
+	setters: ProgramInfo["uniformSetters"],
+	uniforms: Renderable["uniforms"]
+) {
+	for (var name in uniforms) {
+		const setter = setters[name];
+		if (setter) {
+			setter.setter(uniforms[name]);
+		}
+	}
+}

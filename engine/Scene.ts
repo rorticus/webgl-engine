@@ -1,10 +1,8 @@
 import { GameObject } from "./GameObject";
 import { mat4 } from "gl-matrix";
-import { Camera } from "./Camera";
 
 export class Scene {
 	private _gameObjects: GameObject[];
-	private _camera: Camera;
 
 	constructor() {
 		this._gameObjects = [];
@@ -36,8 +34,8 @@ export class Scene {
 
 		const mvMatrixStack: mat4[] = [mat4.clone(mvMatrix)];
 
-		this._camera.apply(viewportWidth / viewportHeight);
-		mat4.multiply(mvMatrix, mvMatrix, this._camera.viewMatrix);
+		// this._camera.apply(viewportWidth / viewportHeight);
+		// mat4.multiply(mvMatrix, mvMatrix, this._camera.viewMatrix);
 
         const invertMatrix = mat4.create();
         const normalMatrix = mat4.create();
@@ -45,7 +43,7 @@ export class Scene {
 		this._gameObjects.forEach((gameObject) => {
 			mvMatrixStack.push(mat4.clone(mvMatrix));
 
-			mat4.multiply(mvMatrix, mvMatrix, gameObject.modelMatrix);
+			mat4.multiply(mvMatrix, mvMatrix, gameObject.localMatrix);
 
             mat4.invert(invertMatrix, mvMatrix);
             mat4.transpose(normalMatrix, invertMatrix);
