@@ -62,15 +62,15 @@ export class GameObject {
 	}
 
 	rotateX(angle: number) {
-		this.rotateOnAxis([1, 0, 0], angle);
+		this.rotateOnAxis(vec3.fromValues(1, 0, 0), angle);
 	}
 
 	rotateY(angle: number) {
-		this.rotateOnAxis([0, 1, 0], angle);
+		this.rotateOnAxis(vec3.fromValues(0, 1, 0), angle);
 	}
 
 	rotateZ(angle: number) {
-		this.rotateOnAxis([0, 0, 1], angle);
+		this.rotateOnAxis(vec3.fromValues(0, 0, 1), angle);
 	}
 
 	translateOnAxis(axis: vec3, distance: number) {
@@ -181,10 +181,10 @@ export class GameObject {
 	render(gl: WebGLRenderingContext) {
 		if(this.renderable) {
 			gl.useProgram(this.renderable.programInfo.program);
-			setBuffersAndAttributes(gl, this.renderable.programInfo, this.renderable.bufferInfo);
+			setBuffersAndAttributes(gl, this.renderable.programInfo, this.renderable.attributes);
 			setUniforms(this.renderable.programInfo.uniformSetters, this.renderable.uniforms);
 
-			gl.drawElements(gl.TRIANGLES, this.renderable.bufferInfo.numElements || 0, gl.INT, 0);
+			gl.drawElements(gl.TRIANGLES, this.renderable.attributes.numElements || 0, gl.INT, 0);
 		}
 	}
 }

@@ -2,6 +2,7 @@ import {
 	AttribSetter,
 	BufferInfo,
 	GlBuffer,
+	Primitive,
 	ProgramInfo,
 	Renderable,
 	UniformSetter,
@@ -207,4 +208,78 @@ export function setUniforms(
 			setter.setter(uniforms[name]);
 		}
 	}
+}
+
+function createBufferFromTypedArray(
+	gl: WebGLRenderingContext,
+	typedArray: Float32Array | Uint16Array,
+	type: number
+) {
+	type = type || gl.ARRAY_BUFFER;
+	const buffer = gl.createBuffer();
+	gl.bindBuffer(type, buffer);
+	gl.bufferData(type, typedArray, gl.STATIC_DRAW);
+
+	return buffer;
+}
+
+export function createAttribsFromArrays(
+	gl: WebGLRenderingContext,
+	arrays: Primitive
+): Record<string, GlBuffer> {
+	const attribs: Record<string, GlBuffer> = {};
+
+	attribs["position"] = {
+		buffer: createBufferFromTypedArray(
+			gl,
+			new Float32Array(arrays.position.data),
+			undefined
+		),
+		numItems: arrays.position.data.length / arrays.position.numComponents,
+		itemSize: arrays.position.numComponents,
+		type: gl.ARRAY_BUFFER,
+		normalize: false,
+		stride: 0,
+		offset: 0,
+	};
+
+	attribs["indices"] = {
+		buffer: createBufferFromTypedArray(
+			gl,
+			new Float32Array(arrays.indices.data),
+			undefined
+		),
+		numItems: arrays.indices.data.length / arrays.indices.numComponents,
+		itemSize: arrays.indices.numComponents,
+		type: gl.ARRAY_BUFFER,
+		normalize: false,
+		stride: 0,
+		offset: 0,
+	};
+
+	return attribs;
+}
+
+export function createAttributesFromArrays(
+	gl: WebGLRenderingContext,
+	primitive: Primitive
+): BufferInfo {
+	const bufferInfo: BufferInfo = {
+		attribs: createAttribsFromArrays(gl, primitive),
+	};
+
+	let indices = primitive.indices;
+	if (indices) {
+		const typedIndices = new Uint16Array(indices.data);
+		bufferInfo.indices = createBufferFromTypedArray(
+			gl,
+			typedIndices,
+			gl.ELEMENT_ARRAY_BUFFER
+		);
+		bufferInfo.numElements = typedIndices.length / 3;
+	} else {
+		bufferInfo.numElements = primitive.position.data.length / 3;
+	}
+
+	return bufferInfo;
 }

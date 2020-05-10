@@ -10,6 +10,10 @@ export class Engine {
     private _scene: Scene;
     private _gl: WebGLRenderingContext;
 
+    get gl() {
+        return this._gl;
+    }
+
     set fps(value: number) {
         this._step = 1 / value;
     }
