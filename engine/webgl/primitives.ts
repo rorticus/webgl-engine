@@ -27,7 +27,11 @@ function augmentTypedArray(typedArray: any, numComponents: number) {
 	return typedArray;
 }
 
-function createAugmentedTypedArray(numComponents: number, numElements: number, opt_type?: any) {
+function createAugmentedTypedArray(
+	numComponents: number,
+	numElements: number,
+	opt_type?: any
+) {
 	var Type = opt_type || Float32Array;
 	return augmentTypedArray(
 		new Type(numComponents * numElements),
@@ -101,9 +105,9 @@ export function createCubeVertices(size: number) {
 	}
 
 	return {
-		position: positions,
-		normal: normals,
-		texcoord: texcoords,
-		indices: indices,
+		position: { data: positions, numComponents: positions.numComponents },
+		normal: { data: normals, numComponents: normals.numComponents },
+		texcoord: { data: texcoords, numComponents: texcoords.numComponents },
+		indices: { data: indices, numComponents: indices.numComponents },
 	};
 }

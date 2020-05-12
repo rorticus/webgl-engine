@@ -184,7 +184,7 @@ export class GameObject {
 			setBuffersAndAttributes(gl, this.renderable.programInfo, this.renderable.attributes);
 			setUniforms(this.renderable.programInfo.uniformSetters, this.renderable.uniforms);
 
-			gl.drawElements(gl.TRIANGLES, this.renderable.attributes.numElements || 0, gl.INT, 0);
+			gl.drawElements(gl.TRIANGLES, this.renderable.attributes.numElements || 0, gl.UNSIGNED_SHORT, 0);
 		}
 	}
 }

@@ -83,7 +83,7 @@ function setterForAttrib(
 			return (b: GlBuffer) => {
 				gl.bindBuffer(gl.ARRAY_BUFFER, b.buffer);
 				gl.enableVertexAttribArray(location);
-				gl.vertexAttribPointer(location, b.numItems, gl.FLOAT, false, 0, 0);
+				gl.vertexAttribPointer(location, b.itemSize, gl.FLOAT, false, 0, 0);
 			};
 		case gl.INT:
 		case gl.INT_VEC2:
@@ -92,7 +92,7 @@ function setterForAttrib(
 			return (b: GlBuffer) => {
 				gl.bindBuffer(gl.ARRAY_BUFFER, b.buffer);
 				gl.enableVertexAttribArray(location);
-				gl.vertexAttribPointer(location, b.numItems, gl.INT, false, 0, 0);
+				gl.vertexAttribPointer(location, b.itemSize, gl.INT, false, 0, 0);
 			};
 		default:
 			console.error(`Invalid attribute type ${info.type}`, info);
@@ -152,7 +152,7 @@ export function createAttributeSetters(
 		}
 
 		const location = gl.getAttribLocation(program, attribInfo.name);
-		if (location) {
+		if (location !== -1) {
 			attributes[name] = {
 				setter: setterForAttrib(gl, attribInfo, location),
 				location,
@@ -229,7 +229,7 @@ export function createAttribsFromArrays(
 ): Record<string, GlBuffer> {
 	const attribs: Record<string, GlBuffer> = {};
 
-	attribs["position"] = {
+	attribs["a_position"] = {
 		buffer: createBufferFromTypedArray(
 			gl,
 			new Float32Array(arrays.position.data),
@@ -237,21 +237,7 @@ export function createAttribsFromArrays(
 		),
 		numItems: arrays.position.data.length / arrays.position.numComponents,
 		itemSize: arrays.position.numComponents,
-		type: gl.ARRAY_BUFFER,
-		normalize: false,
-		stride: 0,
-		offset: 0,
-	};
-
-	attribs["indices"] = {
-		buffer: createBufferFromTypedArray(
-			gl,
-			new Float32Array(arrays.indices.data),
-			undefined
-		),
-		numItems: arrays.indices.data.length / arrays.indices.numComponents,
-		itemSize: arrays.indices.numComponents,
-		type: gl.ARRAY_BUFFER,
+		type: gl.STATIC_DRAW,
 		normalize: false,
 		stride: 0,
 		offset: 0,
@@ -276,7 +262,7 @@ export function createAttributesFromArrays(
 			typedIndices,
 			gl.ELEMENT_ARRAY_BUFFER
 		);
-		bufferInfo.numElements = typedIndices.length / 3;
+		bufferInfo.numElements = typedIndices.length;
 	} else {
 		bufferInfo.numElements = primitive.position.data.length / 3;
 	}
