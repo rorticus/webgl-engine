@@ -47,33 +47,17 @@ export class Scene {
 			zFar
 		);
 
-		const numFs = 5;
-		const radius = 200;
-
-		const cameraMatrix = mat4.create();
-		mat4.rotateY(cameraMatrix, cameraMatrix, (45 * Math.PI) / 180);
-		mat4.translate(cameraMatrix, cameraMatrix, [0, 0, radius * 1.5]);
-
-		const viewMatrix = mat4.create();
-		mat4.invert(viewMatrix, cameraMatrix);
-
-		const viewProjectionMatrix = mat4.create();
-		mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix);
-
-		mat4.copy(mvMatrix, viewProjectionMatrix);
-
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		mat4.translate(mvMatrix, mvMatrix, [0, 0, -7]);
 
 		this._gameObjects.forEach((gameObject) => {
 			mvMatrixStack.push(mat4.clone(mvMatrix));
 
-			mat4.multiply(mvMatrix, mvMatrix, gameObject.localMatrix);
-			//
-			// mat4.invert(invertMatrix, mvMatrix);
-			// mat4.transpose(normalMatrix, invertMatrix);
+			// mat4.multiply(mvMatrix, mvMatrix, gameObject.localMatrix);
 
 			if (gameObject.renderable) {
-				setUniforms(gameObject.renderable.uniforms, {
+				gl.useProgram(gameObject.renderable.programInfo.program);
+				setUniforms(gameObject.renderable.programInfo, {
+					u_projectionMatrix: projectionMatrix,
 					u_matrix: mvMatrix,
 				});
 			}

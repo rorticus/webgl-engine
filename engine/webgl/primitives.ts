@@ -1,3 +1,5 @@
+import {Primitive, PrimitiveData} from "./interfaces";
+
 function augmentTypedArray(typedArray: any, numComponents: number) {
 	var cursor = 0;
 	typedArray.push = function () {
@@ -110,4 +112,30 @@ export function createCubeVertices(size: number) {
 		texcoord: { data: texcoords, numComponents: texcoords.numComponents },
 		indices: { data: indices, numComponents: indices.numComponents },
 	};
+}
+
+export function triangle(): Primitive {
+	return {
+		position: {
+			data: [
+				3, 3, 0,
+				-3, 3, 0,
+				3, -3, 0,
+				-3, -3, 0
+			],
+			numComponents: 3
+		},
+		indices: {
+			data: [0, 2, 3, 0, 3, 1],
+			numComponents: 1
+		},
+		normal: {
+			data: [],
+			numComponents: 0
+		},
+		texcoord: {
+			data: [],
+			numComponents: 0
+		}
+	}
 }

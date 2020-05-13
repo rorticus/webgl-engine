@@ -168,6 +168,8 @@ export function createProgramInfoFromProgram(
 	gl: WebGLRenderingContext,
 	program: WebGLProgram
 ): ProgramInfo {
+	gl.useProgram(program);
+
 	return {
 		program,
 		uniformSetters: createUniformSetters(gl, program),
@@ -199,9 +201,11 @@ export function setBuffersAndAttributes(
 }
 
 export function setUniforms(
-	setters: ProgramInfo["uniformSetters"],
+	programInfo: ProgramInfo,
 	uniforms: Renderable["uniforms"]
 ) {
+	const setters = programInfo.uniformSetters;
+
 	for (var name in uniforms) {
 		const setter = setters[name];
 		if (setter) {
@@ -213,9 +217,8 @@ export function setUniforms(
 function createBufferFromTypedArray(
 	gl: WebGLRenderingContext,
 	typedArray: Float32Array | Uint16Array,
-	type: number
+	type: number = gl.ARRAY_BUFFER
 ) {
-	type = type || gl.ARRAY_BUFFER;
 	const buffer = gl.createBuffer();
 	gl.bindBuffer(type, buffer);
 	gl.bufferData(type, typedArray, gl.STATIC_DRAW);
@@ -232,8 +235,7 @@ export function createAttribsFromArrays(
 	attribs["a_position"] = {
 		buffer: createBufferFromTypedArray(
 			gl,
-			new Float32Array(arrays.position.data),
-			undefined
+			new Float32Array(arrays.position.data)
 		),
 		numItems: arrays.position.data.length / arrays.position.numComponents,
 		itemSize: arrays.position.numComponents,

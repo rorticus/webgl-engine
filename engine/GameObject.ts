@@ -1,7 +1,7 @@
 import { mat3, mat4, quat, vec3 } from "gl-matrix";
 import { GameComponent } from "./components/GameComponent";
-import {setBuffersAndAttributes, setUniforms} from "./webgl/utils";
-import {Renderable} from "./webgl/interfaces";
+import { setBuffersAndAttributes, setUniforms } from "./webgl/utils";
+import { Renderable } from "./webgl/interfaces";
 
 export class GameObject {
 	id: string;
@@ -179,12 +179,21 @@ export class GameObject {
 	}
 
 	render(gl: WebGLRenderingContext) {
-		if(this.renderable) {
+		if (this.renderable) {
 			gl.useProgram(this.renderable.programInfo.program);
-			setBuffersAndAttributes(gl, this.renderable.programInfo, this.renderable.attributes);
-			setUniforms(this.renderable.programInfo.uniformSetters, this.renderable.uniforms);
+			setUniforms(this.renderable.programInfo, this.renderable.uniforms);
+			setBuffersAndAttributes(
+				gl,
+				this.renderable.programInfo,
+				this.renderable.attributes
+			);
 
-			gl.drawElements(gl.TRIANGLES, this.renderable.attributes.numElements || 0, gl.UNSIGNED_SHORT, 0);
+			gl.drawElements(
+				gl.TRIANGLES,
+				this.renderable.attributes.numElements,
+				gl.UNSIGNED_SHORT,
+				0
+			);
 		}
 	}
 }
