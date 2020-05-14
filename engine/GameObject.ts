@@ -175,7 +175,9 @@ export class GameObject {
 
 	update(deltaInSeconds: number) {
 		this.computeWorldMatrix();
-		this.components.forEach((component) => component.update(deltaInSeconds));
+		this.components.forEach((component) =>
+			component.update(this, deltaInSeconds)
+		);
 	}
 
 	render(gl: WebGLRenderingContext) {

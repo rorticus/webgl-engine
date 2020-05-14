@@ -5,6 +5,7 @@ import { vec3 } from "gl-matrix";
 import {createCubeVertices, triangle} from "../../../engine/webgl/primitives";
 import { createAttributesFromArrays } from "../../../engine/webgl/utils";
 import { createProgram } from "../../../engine/webgl/program";
+import {GameComponent} from "../../../engine/components/GameComponent";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -29,6 +30,14 @@ void main() {
 }
 `;
 
+class Rotater implements GameComponent {
+	priority = 1;
+
+	update(gameObject: GameObject, deltaInSeconds: number): void {
+		gameObject.rotate(0.01, 0.01, 0);
+	}
+}
+
 document.body.appendChild(canvas);
 
 const engine = new Engine(canvas);
@@ -38,12 +47,19 @@ const program = createProgram(engine.gl, simpleVertex, simpleFragment);
 const scene = new Scene();
 
 const testObj = new GameObject();
+// testObj.addComponent(new Rotater());
 testObj.position = vec3.fromValues(0, 0, 0);
 testObj.renderable = {
 	programInfo: program,
 	uniforms: {},
 	attributes: createAttributesFromArrays(engine.gl, createCubeVertices(3)),
 };
+
+const rotate = () => {
+	scene.camera.cameraAngleInRadians += 0.01;
+	setTimeout(rotate, 33);
+};
+rotate();
 
 scene.addGameObject(testObj);
 

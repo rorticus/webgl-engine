@@ -1,12 +1,15 @@
 import { GameObject } from "./GameObject";
 import { mat4 } from "gl-matrix";
 import { setUniforms } from "./webgl/utils";
+import { Camera } from "./Camera";
 
 export class Scene {
 	private _gameObjects: GameObject[];
+	camera: Camera;
 
 	constructor() {
 		this._gameObjects = [];
+		this.camera = new Camera();
 	}
 
 	update(deltaInSeconds: number) {
@@ -30,34 +33,22 @@ export class Scene {
 		viewportHeight: number,
 		gl: WebGLRenderingContext
 	) {
+		this.camera.apply(viewportWidth / viewportHeight);
+
 		let mvMatrix = mat4.create();
 		mat4.identity(mvMatrix);
 
 		const mvMatrixStack: mat4[] = [mat4.clone(mvMatrix)];
 
-		const aspect = viewportWidth / viewportHeight;
-		const zNear = 0.1;
-		const zFar = 2000;
-		const projectionMatrix = mat4.create();
-		mat4.perspective(
-			projectionMatrix,
-			(60 * Math.PI) / 180,
-			aspect,
-			zNear,
-			zFar
-		);
-
-		mat4.translate(mvMatrix, mvMatrix, [0, -2, -7]);
-
 		this._gameObjects.forEach((gameObject) => {
 			mvMatrixStack.push(mat4.clone(mvMatrix));
 
-			// mat4.multiply(mvMatrix, mvMatrix, gameObject.localMatrix);
+			mat4.multiply(mvMatrix, mvMatrix, gameObject.worldMatrix);
 
 			if (gameObject.renderable) {
 				gl.useProgram(gameObject.renderable.programInfo.program);
 				setUniforms(gameObject.renderable.programInfo, {
-					u_projectionMatrix: projectionMatrix,
+					u_projectionMatrix: this.camera.viewProjectionMatrix,
 					u_matrix: mvMatrix,
 				});
 			}
