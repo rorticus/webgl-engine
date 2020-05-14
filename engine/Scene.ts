@@ -47,7 +47,7 @@ export class Scene {
 			zFar
 		);
 
-		mat4.translate(mvMatrix, mvMatrix, [0, 0, -7]);
+		mat4.translate(mvMatrix, mvMatrix, [0, -2, -7]);
 
 		this._gameObjects.forEach((gameObject) => {
 			mvMatrixStack.push(mat4.clone(mvMatrix));

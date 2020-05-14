@@ -42,7 +42,7 @@ testObj.position = vec3.fromValues(0, 0, 0);
 testObj.renderable = {
 	programInfo: program,
 	uniforms: {},
-	attributes: createAttributesFromArrays(engine.gl, triangle()),
+	attributes: createAttributesFromArrays(engine.gl, createCubeVertices(3)),
 };
 
 scene.addGameObject(testObj);
