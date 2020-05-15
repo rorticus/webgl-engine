@@ -35,27 +35,13 @@ export class Scene {
 	) {
 		this.camera.apply(viewportWidth / viewportHeight);
 
-		let mvMatrix = mat4.create();
-		mat4.identity(mvMatrix);
-
-		const mvMatrixStack: mat4[] = [mat4.clone(mvMatrix)];
+		const renderContext = {
+			gl,
+			projectionMatrix: this.camera.viewProjectionMatrix
+		};
 
 		this._gameObjects.forEach((gameObject) => {
-			mvMatrixStack.push(mat4.clone(mvMatrix));
-
-			mat4.multiply(mvMatrix, mvMatrix, gameObject.worldMatrix);
-
-			if (gameObject.renderable) {
-				gl.useProgram(gameObject.renderable.programInfo.program);
-				setUniforms(gameObject.renderable.programInfo, {
-					u_projectionMatrix: this.camera.viewProjectionMatrix,
-					u_matrix: mvMatrix,
-				});
-			}
-
-			gameObject.render(gl);
-
-			mvMatrix = mvMatrixStack.pop();
+			gameObject.render(renderContext);
 		});
 	}
 }

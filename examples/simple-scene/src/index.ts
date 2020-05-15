@@ -2,10 +2,10 @@ import { Engine } from "../../../engine/Engine";
 import { Scene } from "../../../engine/Scene";
 import { GameObject } from "../../../engine/GameObject";
 import { vec3 } from "gl-matrix";
-import {createCubeVertices, triangle} from "../../../engine/webgl/primitives";
+import { createCubeVertices, triangle } from "../../../engine/webgl/primitives";
 import { createAttributesFromArrays } from "../../../engine/webgl/utils";
 import { createProgram } from "../../../engine/webgl/program";
-import {GameComponent} from "../../../engine/components/GameComponent";
+import { GameComponent } from "../../../engine/components/GameComponent";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -46,22 +46,44 @@ const program = createProgram(engine.gl, simpleVertex, simpleFragment);
 
 const scene = new Scene();
 
-const testObj = new GameObject();
-// testObj.addComponent(new Rotater());
-testObj.position = vec3.fromValues(0, 0, 0);
-testObj.renderable = {
-	programInfo: program,
-	uniforms: {},
-	attributes: createAttributesFromArrays(engine.gl, createCubeVertices(3)),
-};
+const cubeModel = createCubeVertices(3);
+
+function createCube(pos: number[]) {
+	const cube = new GameObject();
+	cube.position = vec3.fromValues(pos[0], pos[1], pos[2]);
+	cube.renderable = {
+		programInfo: program,
+		uniforms: {},
+		attributes: createAttributesFromArrays(engine.gl, cubeModel),
+	};
+	cube.addComponent(new Rotater());
+
+	const subCube = new GameObject();
+	subCube.position = vec3.fromValues(0, -4, 0);
+	subCube.renderable = {
+		programInfo: program,
+		uniforms: {},
+		attributes: createAttributesFromArrays(engine.gl, cubeModel)
+	};
+	subCube.scale = vec3.fromValues(0.25, 0.25, 0.25);
+	subCube.addComponent(new Rotater());
+
+	cube.add(subCube);
+
+	return cube;
+}
 
 const rotate = () => {
 	scene.camera.cameraAngleInRadians += 0.01;
 	setTimeout(rotate, 33);
 };
-rotate();
+// rotate();
 
-scene.addGameObject(testObj);
+for (let y = -2; y < 2; y++) {
+	for (let x = -2; x < 2; x++) {
+		scene.addGameObject(createCube([x * 4, 0, y * 4]));
+	}
+}
 
 engine.scene = scene;
 engine.start();

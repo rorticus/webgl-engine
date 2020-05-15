@@ -2,6 +2,7 @@ import { mat3, mat4, quat, vec3 } from "gl-matrix";
 import { GameComponent } from "./components/GameComponent";
 import { setBuffersAndAttributes, setUniforms } from "./webgl/utils";
 import { Renderable } from "./webgl/interfaces";
+import { SceneRenderContext } from "./interfaces";
 
 export class GameObject {
 	id: string;
@@ -178,12 +179,20 @@ export class GameObject {
 		this.components.forEach((component) =>
 			component.update(this, deltaInSeconds)
 		);
+
+		this.children.forEach(child => child.update(deltaInSeconds));
 	}
 
-	render(gl: WebGLRenderingContext) {
+	render(context: SceneRenderContext) {
+		const { gl, projectionMatrix } = context;
+
 		if (this.renderable) {
 			gl.useProgram(this.renderable.programInfo.program);
-			setUniforms(this.renderable.programInfo, this.renderable.uniforms);
+			setUniforms(this.renderable.programInfo, {
+				u_projectionMatrix: projectionMatrix,
+				u_matrix: this.worldMatrix,
+				...this.renderable.uniforms,
+			});
 			setBuffersAndAttributes(
 				gl,
 				this.renderable.programInfo,
@@ -197,5 +206,7 @@ export class GameObject {
 				0
 			);
 		}
+
+		this.children.forEach((child) => child.render(context));
 	}
 }
