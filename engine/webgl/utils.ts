@@ -245,6 +245,19 @@ export function createAttribsFromArrays(
 		offset: 0,
 	};
 
+	attribs["a_normal"] = {
+		buffer: createBufferFromTypedArray(
+			gl,
+			new Float32Array(arrays.normal.data)
+		),
+		numItems: arrays.normal.data.length / arrays.normal.numComponents,
+		itemSize: arrays.normal.numComponents,
+		type: gl.STATIC_DRAW,
+		normalize: false,
+		stride: 0,
+		offset: 0,
+	};
+
 	return attribs;
 }
 

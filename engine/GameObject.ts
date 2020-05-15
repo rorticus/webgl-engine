@@ -187,10 +187,15 @@ export class GameObject {
 		const { gl, projectionMatrix } = context;
 
 		if (this.renderable) {
+			const worldInverseMatrix = mat4.create();
+			mat4.invert(worldInverseMatrix, this.worldMatrix);
+			mat4.transpose(worldInverseMatrix, worldInverseMatrix);
+
 			gl.useProgram(this.renderable.programInfo.program);
 			setUniforms(this.renderable.programInfo, {
 				u_projectionMatrix: projectionMatrix,
 				u_matrix: this.worldMatrix,
+				u_worldInverseTranspose: worldInverseMatrix,
 				...this.renderable.uniforms,
 			});
 			setBuffersAndAttributes(

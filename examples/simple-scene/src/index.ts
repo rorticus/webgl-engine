@@ -14,19 +14,35 @@ canvas.setAttribute("height", "512");
 const simpleVertex = `
 uniform mat4 u_matrix;
 uniform mat4 u_projectionMatrix;
+uniform mat4 u_worldInverseTranspose;
 
 attribute vec3 a_position;
+attribute vec3 a_normal;
+
+varying vec3 transformedNormal;
  
 void main() {
   gl_Position = u_projectionMatrix * u_matrix * vec4(a_position, 1.0);
+  transformedNormal = mat3(u_worldInverseTranspose) * a_normal;
   gl_PointSize = 10.0;
 }`;
 
 const simpleFragment = `
 precision mediump float;
 
+uniform vec3 u_color;
+
+varying vec3 transformedNormal;
+
 void main() {
-  gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
+	vec3 normal = normalize(transformedNormal);
+	vec3 lightDirection = normalize(vec3(0.0, 0.0, -1.0));
+	float directionalLightWeighting = max(dot(normal, -lightDirection), 0.0);
+	vec3 diffuse = u_color;
+	
+	diffuse += vec3(0.0, 1.0, 1.0) * directionalLightWeighting;
+	
+  	gl_FragColor = vec4(diffuse, 1.0);
 }
 `;
 
@@ -53,7 +69,9 @@ function createCube(pos: number[]) {
 	cube.position = vec3.fromValues(pos[0], pos[1], pos[2]);
 	cube.renderable = {
 		programInfo: program,
-		uniforms: {},
+		uniforms: {
+			u_color: vec3.fromValues(1.0, 0.0, 0.0)
+		},
 		attributes: createAttributesFromArrays(engine.gl, cubeModel),
 	};
 	cube.addComponent(new Rotater());
@@ -62,11 +80,13 @@ function createCube(pos: number[]) {
 	subCube.position = vec3.fromValues(0, -4, 0);
 	subCube.renderable = {
 		programInfo: program,
-		uniforms: {},
+		uniforms: {
+			u_color: vec3.fromValues(1.0, 1.0, 0.0)
+		},
 		attributes: createAttributesFromArrays(engine.gl, cubeModel)
 	};
 	subCube.scale = vec3.fromValues(0.25, 0.25, 0.25);
-	subCube.addComponent(new Rotater());
+	// subCube.addComponent(new Rotater());
 
 	cube.add(subCube);
 
