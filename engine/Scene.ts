@@ -1,10 +1,12 @@
-import { GameObject } from "./GameObject";
-import { mat4 } from "gl-matrix";
-import { setUniforms } from "./webgl/utils";
-import { Camera } from "./Camera";
+import {GameObject} from "./GameObject";
+import {vec4} from "gl-matrix";
+import {Camera} from "./Camera";
 
 export class Scene {
 	private _gameObjects: GameObject[];
+
+	ambientColor = vec4.fromValues(1, 1, 1, 1.0 );
+
 	camera: Camera;
 
 	constructor() {
@@ -37,7 +39,8 @@ export class Scene {
 
 		const renderContext = {
 			gl,
-			projectionMatrix: this.camera.viewProjectionMatrix
+			projectionMatrix: this.camera.viewProjectionMatrix,
+			u_ambientColor: this.ambientColor
 		};
 
 		this._gameObjects.forEach((gameObject) => {

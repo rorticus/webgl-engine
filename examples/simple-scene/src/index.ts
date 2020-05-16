@@ -31,18 +31,17 @@ const simpleFragment = `
 precision mediump float;
 
 uniform vec3 u_color;
+uniform vec4 u_ambientColor;
 
 varying vec3 transformedNormal;
 
 void main() {
 	vec3 normal = normalize(transformedNormal);
 	vec3 lightDirection = normalize(vec3(0.0, 0.0, -1.0));
-	float directionalLightWeighting = max(dot(normal, -lightDirection), 0.0);
-	vec3 diffuse = u_color;
-	
-	diffuse += vec3(0.0, 1.0, 1.0) * directionalLightWeighting;
-	
-  	gl_FragColor = vec4(diffuse, 1.0);
+	float directionalLightWeighting = max(dot(normal, -lightDirection), 0.25);
+			
+  	gl_FragColor = u_ambientColor + vec4(u_color, 1.0);
+  	gl_FragColor.rgb *= directionalLightWeighting;
 }
 `;
 
