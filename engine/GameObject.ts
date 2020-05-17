@@ -184,7 +184,7 @@ export class GameObject {
 	}
 
 	render(context: SceneRenderContext) {
-		const { gl, projectionMatrix } = context;
+		const { gl, projectionMatrix, u_ambientColor, pointLights } = context;
 
 		if (this.renderable) {
 			const worldInverseMatrix = mat4.create();
@@ -196,6 +196,9 @@ export class GameObject {
 				u_projectionMatrix: projectionMatrix,
 				u_matrix: this.worldMatrix,
 				u_worldInverseTranspose: worldInverseMatrix,
+				u_ambientColor,
+				u_lightWorldPosition: pointLights[0].position,
+				u_lightWorldColor: pointLights[0].color,
 				...this.renderable.uniforms,
 			});
 			setBuffersAndAttributes(
