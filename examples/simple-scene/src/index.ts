@@ -12,16 +12,18 @@ canvas.setAttribute("width", "512");
 canvas.setAttribute("height", "512");
 
 const simpleVertex = `
+const int NUM_POSITIONAL_LIGHTS = 2;
+
 uniform mat4 u_matrix;
 uniform mat4 u_projectionMatrix;
 uniform mat4 u_worldInverseTranspose;
-uniform vec3 u_lightWorldPosition;
+uniform vec3 u_lightWorldPosition[NUM_POSITIONAL_LIGHTS];
 
 attribute vec3 a_position;
 attribute vec3 a_normal;
 
 varying vec3 v_normal;
-varying vec3 v_surfaceToLight;
+varying vec3 v_surfaceToLight[NUM_POSITIONAL_LIGHTS];
 varying vec3 v_position;
  
 void main() {
@@ -33,8 +35,11 @@ void main() {
   
   // point lighting
   vec3 surfaceWorldPosition = surfacePosition.xyz;
-  vec4 lightPosition = vec4(u_lightWorldPosition, 1.0);
-  v_surfaceToLight = surfaceWorldPosition - lightPosition.xyz;  
+  
+  for(int i = 0; i < NUM_POSITIONAL_LIGHTS; i++) {
+  	vec4 lightPosition = vec4(u_lightWorldPosition[i], 1.0) * u_matrix;
+  	v_surfaceToLight[i] = surfaceWorldPosition - lightPosition.xyz;
+  }  
 }`;
 
 const simpleFragment = `
@@ -42,26 +47,37 @@ precision mediump float;
 
 uniform vec3 u_color;
 uniform vec3 u_ambientColor;
-uniform vec3 u_lightWorldColor;
+
+const int NUM_POSITIONAL_LIGHTS = 2;
 
 varying vec3 v_normal;
-varying vec3 v_surfaceToLight;
+varying vec3 v_surfaceToLight[NUM_POSITIONAL_LIGHTS];
+uniform vec3 u_lightWorldColor[NUM_POSITIONAL_LIGHTS];
 varying vec3 v_position;
+
+vec3 calculateAmbientColor(void) {
+	return u_ambientColor;
+}
+
+vec3 calculatePositionalLights(vec3 normal) {
+	vec3 diffuse = vec3(0.0, 0.0, 0.0);
+	
+	for(int i = 0; i < NUM_POSITIONAL_LIGHTS; i++) {
+		vec3 lightDirection = normalize(v_surfaceToLight[i]);
+		float light = max(dot(normal, -lightDirection), 0.0);
+		
+		diffuse += u_lightWorldColor[i] * u_color * light;				
+	}
+	
+	return diffuse;
+}
 
 void main() {
 	vec3 normal = normalize(v_normal);
-	vec3 eyeVector = normalize(-v_position);
 	
-	vec3 iAmbient = u_ambientColor;
-	vec3 iDiffuse = vec3(0.0, 0.0, 0.0);
 	vec3 iSpecular = vec3(0.0, 0.0, 0.0);
-	
-	vec3 lightDirection = normalize(v_surfaceToLight);
-	float light = max(dot(normal, -lightDirection), 0.0);
-	
-	iDiffuse += u_lightWorldColor * u_color * light;
-	
-	vec3 iColor = iAmbient + iDiffuse + iSpecular;
+		
+	vec3 iColor = calculateAmbientColor() + calculatePositionalLights(normal) + iSpecular;
 				
   	gl_FragColor = vec4(iColor, 1.0);
 }
@@ -82,7 +98,11 @@ const engine = new Engine(canvas);
 const program = createProgram(engine.gl, simpleVertex, simpleFragment);
 
 const scene = new Scene();
-scene.pointLight.position = vec3.fromValues(0, 100, 100);
+scene.pointLights[0].position = vec3.fromValues(0, 0, 10);
+scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
+
+scene.pointLights[1].position = vec3.fromValues(10, 0, 0);
+scene.pointLights[1].color = vec3.fromValues(1, 1, 1);
 
 const cubeModel = createCubeVertices(3);
 

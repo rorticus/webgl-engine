@@ -1,13 +1,13 @@
-import {GameObject} from "./GameObject";
-import {vec3, vec4} from "gl-matrix";
-import {Camera} from "./Camera";
-import {Light, LightType} from "./Light";
+import { GameObject } from "./GameObject";
+import { vec3, vec4 } from "gl-matrix";
+import { Camera } from "./Camera";
+import { Light, LightType } from "./Light";
 
 export class Scene {
 	private _gameObjects: GameObject[];
 
 	ambientColor = vec3.fromValues(0.1, 0.1, 0.1);
-	pointLight: Light;
+	pointLights: Light[];
 
 	camera: Camera;
 
@@ -15,10 +15,17 @@ export class Scene {
 		this._gameObjects = [];
 		this.camera = new Camera();
 
-		this.pointLight = new Light();
-		this.pointLight.type = LightType.Point;
-		this.pointLight.position = vec3.fromValues(0, 0, 0);
-		this.pointLight.color = vec3.fromValues(1, 1, 1);
+		const light1 = new Light();
+		light1.type = LightType.Point;
+		light1.position = vec3.fromValues(0, 0, 0);
+		light1.color = vec3.fromValues(0, 0, 0);
+
+		const light2 = new Light();
+		light2.type = LightType.Point;
+		light2.position = vec3.fromValues(0, 0, 0);
+		light2.color = vec3.fromValues(0, 0, 0);
+
+		this.pointLights = [light1, light2];
 	}
 
 	update(deltaInSeconds: number) {
@@ -48,9 +55,7 @@ export class Scene {
 			gl,
 			projectionMatrix: this.camera.viewProjectionMatrix,
 			u_ambientColor: this.ambientColor,
-			pointLights: [
-				this.pointLight
-			]
+			pointLights: this.pointLights,
 		};
 
 		this._gameObjects.forEach((gameObject) => {

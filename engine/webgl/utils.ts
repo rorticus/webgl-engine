@@ -28,9 +28,19 @@ function setterForUniform(
 				gl.uniform2fv(location, v);
 			};
 		case gl.FLOAT_VEC3:
-			return (v: Float32List) => {
-				gl.uniform3fv(location, v);
-			};
+			if (info.size > 1) {
+				return (v: Float32List[]) => {
+					const fl = new Float32Array(info.size * 3);
+					for (let i = 0; i < v.length; i++) {
+						fl.set(v[i], i * 3);
+					}
+					gl.uniform3fv(location, fl);
+				};
+			} else {
+				return (v: Float32List) => {
+					gl.uniform3fv(location, v);
+				};
+			}
 		case gl.FLOAT_VEC4:
 			return (v: Float32List) => {
 				gl.uniform4fv(location, v);

@@ -197,8 +197,8 @@ export class GameObject {
 				u_matrix: this.worldMatrix,
 				u_worldInverseTranspose: worldInverseMatrix,
 				u_ambientColor,
-				u_lightWorldPosition: pointLights[0].position,
-				u_lightWorldColor: pointLights[0].color,
+				u_lightWorldPosition: pointLights.map(light => light.position),
+				u_lightWorldColor: pointLights.map(light => light.color),
 				...this.renderable.uniforms,
 			});
 			setBuffersAndAttributes(
