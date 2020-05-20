@@ -37,7 +37,7 @@ void main() {
   vec3 surfaceWorldPosition = surfacePosition.xyz;
   
   for(int i = 0; i < NUM_POSITIONAL_LIGHTS; i++) {
-  	vec4 lightPosition = vec4(u_lightWorldPosition[i], 1.0) * u_matrix;
+  	vec4 lightPosition = vec4(u_lightWorldPosition[i], 1.0);
   	v_surfaceToLight[i] = surfaceWorldPosition - lightPosition.xyz;
   }  
 }`;
@@ -98,11 +98,11 @@ const engine = new Engine(canvas);
 const program = createProgram(engine.gl, simpleVertex, simpleFragment);
 
 const scene = new Scene();
-scene.pointLights[0].position = vec3.fromValues(0, 0, 10);
+scene.pointLights[0].position = vec3.fromValues(0, 0, 15);
 scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
 
-scene.pointLights[1].position = vec3.fromValues(10, 0, 0);
-scene.pointLights[1].color = vec3.fromValues(1, 1, 1);
+// scene.pointLights[1].position = vec3.fromValues(10, 0, 0);
+// scene.pointLights[1].color = vec3.fromValues(1, 1, 1);
 
 const cubeModel = createCubeVertices(3);
 
@@ -116,7 +116,8 @@ function createCube(pos: number[]) {
 		},
 		attributes: createAttributesFromArrays(engine.gl, cubeModel),
 	};
-	cube.rotateX(Math.PI);
+	// cube.scale = vec3.fromValues(1, 1, 0.25);
+	// cube.rotateX(Math.PI);
 	cube.addComponent(new Rotater());
 
 	const subCube = new GameObject();
@@ -129,7 +130,7 @@ function createCube(pos: number[]) {
 		attributes: createAttributesFromArrays(engine.gl, cubeModel)
 	};
 	subCube.scale = vec3.fromValues(0.25, 0.25, 0.25);
-	// subCube.addComponent(new Rotater());
+	subCube.addComponent(new Rotater());
 
 	cube.add(subCube);
 
