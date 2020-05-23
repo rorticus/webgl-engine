@@ -6,10 +6,13 @@ import { createCubeVertices, triangle } from "../../../engine/webgl/primitives";
 import { createAttributesFromArrays } from "../../../engine/webgl/utils";
 import { createProgram } from "../../../engine/webgl/program";
 import { GameComponent } from "../../../engine/components/GameComponent";
+import {loadGLTF} from "../../../engine/webgl/gltf";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
 canvas.setAttribute("height", "512");
+
+const gltf = require('./weird.json');
 
 const simpleVertex = `
 const int NUM_POSITIONAL_LIGHTS = 2;
@@ -95,6 +98,8 @@ document.body.appendChild(canvas);
 
 const engine = new Engine(canvas);
 
+const cubeMeshes = loadGLTF(engine.gl, gltf);
+
 const program = createProgram(engine.gl, simpleVertex, simpleFragment);
 
 const scene = new Scene();
@@ -114,25 +119,25 @@ function createCube(pos: number[]) {
 		uniforms: {
 			u_color: vec3.fromValues(1.0, 0.0, 0.0)
 		},
-		attributes: createAttributesFromArrays(engine.gl, cubeModel),
+		attributes: cubeMeshes.meshes['Cube'],
 	};
 	// cube.scale = vec3.fromValues(1, 1, 0.25);
 	// cube.rotateX(Math.PI);
 	cube.addComponent(new Rotater());
 
-	const subCube = new GameObject();
-	subCube.position = vec3.fromValues(0, -4, 0);
-	subCube.renderable = {
-		programInfo: program,
-		uniforms: {
-			u_color: vec3.fromValues(1.0, 1.0, 0.0)
-		},
-		attributes: createAttributesFromArrays(engine.gl, cubeModel)
-	};
-	subCube.scale = vec3.fromValues(0.25, 0.25, 0.25);
-	subCube.addComponent(new Rotater());
+	// const subCube = new GameObject();
+	// subCube.position = vec3.fromValues(0, -4, 0);
+	// subCube.renderable = {
+	// 	programInfo: program,
+	// 	uniforms: {
+	// 		u_color: vec3.fromValues(1.0, 1.0, 0.0)
+	// 	},
+	// 	attributes: createAttributesFromArrays(engine.gl, cubeModel)
+	// };
+	// subCube.scale = vec3.fromValues(0.25, 0.25, 0.25);
+	// subCube.addComponent(new Rotater());
 
-	cube.add(subCube);
+	// cube.add(subCube);
 
 	return cube;
 }

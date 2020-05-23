@@ -1,7 +1,10 @@
 import {
 	AttribSetter,
 	BufferInfo,
-	GlBuffer,
+	GlAccessor,
+	GlAccessorType,
+	GlBufferAndView,
+	NativeArray,
 	Primitive,
 	ProgramInfo,
 	Renderable,
@@ -90,7 +93,7 @@ function setterForAttrib(
 		case gl.FLOAT_VEC2:
 		case gl.FLOAT_VEC3:
 		case gl.FLOAT_VEC4:
-			return (b: GlBuffer) => {
+			return (b: GlBufferAndView) => {
 				gl.bindBuffer(gl.ARRAY_BUFFER, b.buffer);
 				gl.enableVertexAttribArray(location);
 				gl.vertexAttribPointer(location, b.itemSize, gl.FLOAT, false, 0, 0);
@@ -99,7 +102,7 @@ function setterForAttrib(
 		case gl.INT_VEC2:
 		case gl.INT_VEC3:
 		case gl.INT_VEC4:
-			return (b: GlBuffer) => {
+			return (b: GlBufferAndView) => {
 				gl.bindBuffer(gl.ARRAY_BUFFER, b.buffer);
 				gl.enableVertexAttribArray(location);
 				gl.vertexAttribPointer(location, b.itemSize, gl.INT, false, 0, 0);
@@ -224,9 +227,9 @@ export function setUniforms(
 	}
 }
 
-function createBufferFromTypedArray(
+export function createBufferFromTypedArray(
 	gl: WebGLRenderingContext,
-	typedArray: Float32Array | Uint16Array,
+	typedArray: NativeArray,
 	type: number = gl.ARRAY_BUFFER
 ) {
 	const buffer = gl.createBuffer();
@@ -239,8 +242,8 @@ function createBufferFromTypedArray(
 export function createAttribsFromArrays(
 	gl: WebGLRenderingContext,
 	arrays: Primitive
-): Record<string, GlBuffer> {
-	const attribs: Record<string, GlBuffer> = {};
+): Record<string, GlBufferAndView> {
+	const attribs: Record<string, GlBufferAndView> = {};
 
 	attribs["a_position"] = {
 		buffer: createBufferFromTypedArray(
@@ -293,4 +296,99 @@ export function createAttributesFromArrays(
 	}
 
 	return bufferInfo;
+}
+
+export function sizeInBytesForDataType(
+	gl: WebGLRenderingContext,
+	type: GLenum
+) {
+	switch (type) {
+		case gl.BYTE:
+			return 1;
+		case gl.UNSIGNED_BYTE:
+			return 1;
+		case gl.SHORT:
+			return 2;
+		case gl.UNSIGNED_SHORT:
+			return 2;
+		case gl.UNSIGNED_INT:
+			return 4;
+		case gl.FLOAT:
+			return 4;
+	}
+
+	return 0;
+}
+
+export function numberOfComponentsForType(type: GlAccessorType) {
+	switch (type) {
+		case GlAccessorType.SCALAR:
+			return 1;
+		case GlAccessorType.VEC2:
+			return 2;
+		case GlAccessorType.VEC3:
+			return 3;
+		case GlAccessorType.VEC4:
+			return 4;
+		case GlAccessorType.MAT2:
+			return 4;
+		case GlAccessorType.MAT3:
+			return 9;
+		case GlAccessorType.MAT4:
+			return 16;
+	}
+
+	return 0;
+}
+
+export function nativeArrayFromAccessor(
+	gl: WebGLRenderingContext,
+	accessor: GlAccessor
+): NativeArray {
+	switch (accessor.componentType) {
+		case gl.FLOAT:
+			return new Float32Array(
+				accessor.bufferView.buffer.arrayBuffer,
+				accessor.byteOffset + accessor.bufferView.byteOffset,
+				accessor.count * numberOfComponentsForType(accessor.type)
+			);
+		case gl.BYTE:
+			return new Int8Array(
+				accessor.bufferView.buffer.arrayBuffer,
+				accessor.byteOffset + accessor.bufferView.byteOffset,
+				accessor.count * numberOfComponentsForType(accessor.type)
+			);
+		case gl.UNSIGNED_BYTE:
+			return new Uint8Array(
+				accessor.bufferView.buffer.arrayBuffer,
+				accessor.byteOffset + accessor.bufferView.byteOffset,
+				accessor.count * numberOfComponentsForType(accessor.type)
+			);
+		case gl.INT:
+			return new Int32Array(
+				accessor.bufferView.buffer.arrayBuffer,
+				accessor.byteOffset + accessor.bufferView.byteOffset,
+				accessor.count * numberOfComponentsForType(accessor.type)
+			);
+		case gl.UNSIGNED_INT:
+			return new Uint32Array(
+				accessor.bufferView.buffer.arrayBuffer,
+				accessor.byteOffset + accessor.bufferView.byteOffset,
+				accessor.count * numberOfComponentsForType(accessor.type)
+			);
+		case gl.SHORT:
+			return new Int16Array(
+				accessor.bufferView.buffer.arrayBuffer,
+				accessor.byteOffset + accessor.bufferView.byteOffset,
+				accessor.count * numberOfComponentsForType(accessor.type)
+			);
+		case gl.UNSIGNED_SHORT:
+			return new Uint16Array(
+				accessor.bufferView.buffer.arrayBuffer,
+				accessor.byteOffset + accessor.bufferView.byteOffset,
+				accessor.count * numberOfComponentsForType(accessor.type)
+			);
+	}
+
+	throw new Error(`Unknown native array type ${accessor.componentType}`);
 }
