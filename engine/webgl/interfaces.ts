@@ -23,10 +23,14 @@ export interface BufferInfo {
 	elementType?: number;
 }
 
-export interface Renderable {
-	programInfo: ProgramInfo;
+export interface SingleRenderable {
 	attributes: BufferInfo;
 	uniforms: Record<string, any>;
+}
+
+export interface Renderable {
+	programInfo: ProgramInfo;
+	renderables: SingleRenderable[];
 }
 
 export interface GlBufferAndView {

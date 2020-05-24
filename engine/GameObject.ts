@@ -180,7 +180,7 @@ export class GameObject {
 			component.update(this, deltaInSeconds)
 		);
 
-		this.children.forEach(child => child.update(deltaInSeconds));
+		this.children.forEach((child) => child.update(deltaInSeconds));
 	}
 
 	render(context: SceneRenderContext) {
@@ -197,22 +197,26 @@ export class GameObject {
 				u_matrix: this.worldMatrix,
 				u_worldInverseTranspose: worldInverseMatrix,
 				u_ambientColor,
-				u_lightWorldPosition: pointLights.map(light => light.position),
-				u_lightWorldColor: pointLights.map(light => light.color),
-				...this.renderable.uniforms,
+				u_lightWorldPosition: pointLights.map((light) => light.position),
+				u_lightWorldColor: pointLights.map((light) => light.color),
 			});
-			setBuffersAndAttributes(
-				gl,
-				this.renderable.programInfo,
-				this.renderable.attributes
-			);
 
-			gl.drawElements(
-				gl.TRIANGLES,
-				this.renderable.attributes.numElements,
-				gl.UNSIGNED_SHORT,
-				0
-			);
+			this.renderable.renderables.forEach((renderable) => {
+				setUniforms(this.renderable.programInfo, renderable.uniforms);
+
+				setBuffersAndAttributes(
+					gl,
+					this.renderable.programInfo,
+					renderable.attributes
+				);
+
+				gl.drawElements(
+					gl.TRIANGLES,
+					renderable.attributes.numElements,
+					gl.UNSIGNED_SHORT,
+					0
+				);
+			});
 		}
 
 		this.children.forEach((child) => child.render(context));

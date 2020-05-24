@@ -6,7 +6,7 @@ export class Camera {
 	fov = (60 * Math.PI) / 180;
 
     cameraAngleInRadians = 0;
-	radius = 15;
+	radius = 0.5;
 	lookAt = vec3.fromValues(0, 0, 0);
 
 	projectionMatrix: mat4;

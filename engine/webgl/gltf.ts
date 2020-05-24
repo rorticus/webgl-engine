@@ -11,6 +11,7 @@ import {
 	nativeArrayFromAccessor,
 	numberOfComponentsForType,
 } from "./utils";
+import { vec3 } from "gl-matrix";
 
 export interface GltfPrimitive {
 	attributes: Record<string, number>;
@@ -92,7 +93,12 @@ export function loadGLTF(gl: WebGLRenderingContext, json: GltfRoot) {
 	);
 
 	const meshes = json.meshes.reduce((meshes, mesh) => {
-		meshes[mesh.name] = createAttributesFromPrimitive(gl, accessors, mesh.primitives[0]);
+		meshes[mesh.name] = mesh.primitives.map((primitive) => ({
+			attributes: createAttributesFromPrimitive(gl, accessors, primitive),
+			uniforms: {
+				u_color: vec3.fromValues(1.0, 0.0, 0.0),
+			},
+		}));
 		return meshes;
 	}, {} as any);
 

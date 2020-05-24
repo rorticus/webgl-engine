@@ -8,6 +8,7 @@ import {
 	Primitive,
 	ProgramInfo,
 	Renderable,
+	SingleRenderable,
 	UniformSetter,
 } from "./interfaces";
 
@@ -215,7 +216,7 @@ export function setBuffersAndAttributes(
 
 export function setUniforms(
 	programInfo: ProgramInfo,
-	uniforms: Renderable["uniforms"]
+	uniforms: SingleRenderable["uniforms"]
 ) {
 	const setters = programInfo.uniformSetters;
 

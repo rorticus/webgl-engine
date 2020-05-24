@@ -12,7 +12,7 @@ const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
 canvas.setAttribute("height", "512");
 
-const gltf = require('./weird.json');
+const gltf = require('./banana.json');
 
 const simpleVertex = `
 const int NUM_POSITIONAL_LIGHTS = 2;
@@ -109,17 +109,12 @@ scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
 // scene.pointLights[1].position = vec3.fromValues(10, 0, 0);
 // scene.pointLights[1].color = vec3.fromValues(1, 1, 1);
 
-const cubeModel = createCubeVertices(3);
-
 function createCube(pos: number[]) {
 	const cube = new GameObject();
 	cube.position = vec3.fromValues(pos[0], pos[1], pos[2]);
 	cube.renderable = {
 		programInfo: program,
-		uniforms: {
-			u_color: vec3.fromValues(1.0, 0.0, 0.0)
-		},
-		attributes: cubeMeshes.meshes['Cube'],
+		renderables: cubeMeshes.meshes['Mesh banana']
 	};
 	// cube.scale = vec3.fromValues(1, 1, 0.25);
 	// cube.rotateX(Math.PI);
