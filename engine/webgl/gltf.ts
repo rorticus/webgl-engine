@@ -19,6 +19,24 @@ export interface GltfPrimitive {
 	material?: number;
 }
 
+export interface GltfMaterial {
+	name?: string;
+	normalTexture?: any;
+	occlusionTexture?: any;
+	emissiveTexture?: any;
+	emissiveFactor?: [number, number, number];
+	alphaMode?: string;
+	alphaCutoff?: number;
+	doubleSided?: boolean;
+	pbrMetallicRoughness?: {
+		baseColorFactor?: [number, number, number, number];
+		baseColorTexture?: number;
+		metallicFactor?: number;
+		roughnessFactor?: number;
+		metallicRoughnessTexture?: number;
+	};
+}
+
 export interface GltfMesh {
 	name: string;
 	primitives: GltfPrimitive[];
@@ -52,6 +70,7 @@ export interface GltfRoot {
 	accessors: GltfAccessor[];
 	bufferViews: GltfBufferView[];
 	buffers: GltfBuffer[];
+	materials?: GltfMaterial[];
 }
 
 export function loadGLTF(gl: WebGLRenderingContext, json: GltfRoot) {
@@ -95,9 +114,11 @@ export function loadGLTF(gl: WebGLRenderingContext, json: GltfRoot) {
 	const meshes = json.meshes.reduce((meshes, mesh) => {
 		meshes[mesh.name] = mesh.primitives.map((primitive) => ({
 			attributes: createAttributesFromPrimitive(gl, accessors, primitive),
-			uniforms: {
-				u_color: vec3.fromValues(1.0, 0.0, 0.0),
-			},
+			uniforms: primitive.material !== undefined
+				? materialToUniforms(json.materials[primitive.material])
+				: {
+						u_color: vec3.fromValues(1.0, 0.0, 0.0),
+				  },
 		}));
 		return meshes;
 	}, {} as any);
@@ -148,4 +169,20 @@ export function createAttributesFromPrimitive(
 	}
 
 	return bufferInfo;
+}
+
+export function materialToUniforms(material: GltfMaterial) {
+	const { pbrMetallicRoughness } = material;
+
+	if (pbrMetallicRoughness) {
+		const { baseColorFactor = [1, 1, 1, 1] } = pbrMetallicRoughness;
+
+		return {
+			u_color: [baseColorFactor[0], baseColorFactor[1], baseColorFactor[2]],
+		};
+	}
+
+	return {
+		u_color: [1, 1, 1, 1],
+	};
 }

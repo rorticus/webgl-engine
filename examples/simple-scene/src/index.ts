@@ -143,11 +143,14 @@ const rotate = () => {
 };
 // rotate();
 
-for (let y = -2; y < 2; y++) {
-	for (let x = -2; x < 2; x++) {
-		scene.addGameObject(createCube([x * 4, 0, y * 4]));
-	}
-}
+// for (let y = -2; y < 2; y++) {
+// 	for (let x = -2; x < 2; x++) {
+// 		scene.addGameObject(createCube([x * 4, 0, y * 4]));
+// 	}
+// }
+
+scene.camera.radius = 2;
+scene.addGameObject(createCube([0, 0, 0]));
 
 engine.scene = scene;
 engine.start();

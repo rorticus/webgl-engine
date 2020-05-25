@@ -32,7 +32,7 @@ export class Camera {
         const cameraMatrix = mat4.create();
         mat4.identity(cameraMatrix);
         mat4.rotateY(cameraMatrix, cameraMatrix, this.cameraAngleInRadians);
-        mat4.translate(cameraMatrix, cameraMatrix, [0, 10, this.radius * 1.5]);
+        mat4.translate(cameraMatrix, cameraMatrix, [0, 0, this.radius]);
 
         const cameraPosition = [cameraMatrix[12], cameraMatrix[13], cameraMatrix[14]];
         const up = [0, 1, 0];
