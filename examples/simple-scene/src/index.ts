@@ -98,59 +98,18 @@ document.body.appendChild(canvas);
 
 const engine = new Engine(canvas);
 
-const cubeMeshes = loadGLTF(engine.gl, gltf);
-
 const program = createProgram(engine.gl, simpleVertex, simpleFragment);
+
+const pizzaScene = loadGLTF(engine.gl, program, require('./pizza.json'));
+console.log(pizzaScene);
+pizzaScene.addComponent(new Rotater());
 
 const scene = new Scene();
 scene.pointLights[0].position = vec3.fromValues(0, 0, 15);
 scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
-
-// scene.pointLights[1].position = vec3.fromValues(10, 0, 0);
-// scene.pointLights[1].color = vec3.fromValues(1, 1, 1);
-
-function createCube(pos: number[]) {
-	const cube = new GameObject();
-	cube.position = vec3.fromValues(pos[0], pos[1], pos[2]);
-	cube.renderable = {
-		programInfo: program,
-		renderables: cubeMeshes.meshes['Mesh banana']
-	};
-	// cube.scale = vec3.fromValues(1, 1, 0.25);
-	// cube.rotateX(Math.PI);
-	cube.addComponent(new Rotater());
-
-	// const subCube = new GameObject();
-	// subCube.position = vec3.fromValues(0, -4, 0);
-	// subCube.renderable = {
-	// 	programInfo: program,
-	// 	uniforms: {
-	// 		u_color: vec3.fromValues(1.0, 1.0, 0.0)
-	// 	},
-	// 	attributes: createAttributesFromArrays(engine.gl, cubeModel)
-	// };
-	// subCube.scale = vec3.fromValues(0.25, 0.25, 0.25);
-	// subCube.addComponent(new Rotater());
-
-	// cube.add(subCube);
-
-	return cube;
-}
-
-const rotate = () => {
-	scene.camera.cameraAngleInRadians += 0.01;
-	setTimeout(rotate, 33);
-};
-// rotate();
-
-// for (let y = -2; y < 2; y++) {
-// 	for (let x = -2; x < 2; x++) {
-// 		scene.addGameObject(createCube([x * 4, 0, y * 4]));
-// 	}
-// }
-
 scene.camera.radius = 2;
-scene.addGameObject(createCube([0, 0, 0]));
+
+scene.addGameObject(pizzaScene);
 
 engine.scene = scene;
 engine.start();

@@ -4,14 +4,15 @@ import {
 	GlAccessorType,
 	GlBuffer,
 	GlBufferView,
-	Primitive,
+	ProgramInfo,
 } from "./interfaces";
 import {
 	createBufferFromTypedArray,
 	nativeArrayFromAccessor,
 	numberOfComponentsForType,
 } from "./utils";
-import { vec3 } from "gl-matrix";
+import { quat, vec3 } from "gl-matrix";
+import { GameObject } from "../GameObject";
 
 export interface GltfPrimitive {
 	attributes: Record<string, number>;
@@ -40,6 +41,20 @@ export interface GltfMaterial {
 export interface GltfMesh {
 	name: string;
 	primitives: GltfPrimitive[];
+}
+
+export interface GltfNode {
+	name?: string;
+	rotation?: [number, number, number, number];
+	translation?: [number, number, number];
+	scale?: [number, number, number];
+	mesh?: number;
+	children?: number[];
+}
+
+export interface GltfScene {
+	name?: string;
+	nodes?: number[];
 }
 
 export interface GltfAccessor {
@@ -71,9 +86,16 @@ export interface GltfRoot {
 	bufferViews: GltfBufferView[];
 	buffers: GltfBuffer[];
 	materials?: GltfMaterial[];
+	scenes?: GltfScene[];
+	scene?: number;
+	nodes?: GltfNode[];
 }
 
-export function loadGLTF(gl: WebGLRenderingContext, json: GltfRoot) {
+export function loadGLTF(
+	gl: WebGLRenderingContext,
+	programInfo: ProgramInfo,
+	json: GltfRoot
+) {
 	const buffers = json.buffers.map((buffer) => {
 		const arrayBuffer = new Uint8Array(buffer.byteLength);
 
@@ -111,21 +133,67 @@ export function loadGLTF(gl: WebGLRenderingContext, json: GltfRoot) {
 			} as GlAccessor)
 	);
 
-	const meshes = json.meshes.reduce((meshes, mesh) => {
-		meshes[mesh.name] = mesh.primitives.map((primitive) => ({
-			attributes: createAttributesFromPrimitive(gl, accessors, primitive),
-			uniforms: primitive.material !== undefined
-				? materialToUniforms(json.materials[primitive.material])
-				: {
-						u_color: vec3.fromValues(1.0, 0.0, 0.0),
-				  },
-		}));
-		return meshes;
-	}, {} as any);
+	const scene = new GameObject();
 
-	return {
-		meshes,
-	};
+	const { scene: sceneIndex = 0, scenes = [], nodes = [] } = json;
+
+	const gltfNodes = nodes.map((node) => {
+		const n = new GameObject();
+		n.id = node.name;
+
+		if (node.rotation) {
+			n.rotation = quat.fromValues(...node.rotation);
+		}
+
+		if (node.translation) {
+			n.position = vec3.fromValues(...node.translation);
+		}
+
+		if (node.scale) {
+			n.scale = vec3.fromValues(...node.scale);
+		}
+
+		if (node.mesh !== undefined) {
+			const mesh = json.meshes[node.mesh];
+
+			if (mesh) {
+				n.renderable = {
+					programInfo,
+					renderables: mesh.primitives.map((primitive) => ({
+						attributes: createAttributesFromPrimitive(gl, accessors, primitive),
+						uniforms:
+							primitive.material !== undefined
+								? materialToUniforms(json.materials[primitive.material])
+								: {
+										u_color: vec3.fromValues(1.0, 0.0, 0.0),
+								  },
+					})),
+				};
+			}
+		}
+
+		return n;
+	});
+
+	nodes.forEach((node, index) => {
+		if (node.children) {
+			node.children.forEach((child) => {
+				gltfNodes[index].add(gltfNodes[child]);
+			});
+		}
+	});
+
+	if (sceneIndex < scenes.length) {
+		const { name = "", nodes = [] } = scenes[sceneIndex];
+
+		scene.id = name;
+
+		nodes.forEach((node) => {
+			scene.add(gltfNodes[node]);
+		});
+	}
+
+	return scene;
 }
 
 export function createAttributesFromPrimitive(
