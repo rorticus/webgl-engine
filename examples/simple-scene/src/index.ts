@@ -1,12 +1,12 @@
-import { Engine } from "../../../engine/Engine";
-import { Scene } from "../../../engine/Scene";
-import { GameObject } from "../../../engine/GameObject";
+import { Engine } from "../../../src/Engine";
+import { Scene } from "../../../src/Scene";
+import { GameObject } from "../../../src/GameObject";
 import { vec3 } from "gl-matrix";
-import { createCubeVertices, triangle } from "../../../engine/webgl/primitives";
-import { createAttributesFromArrays } from "../../../engine/webgl/utils";
-import { createProgram } from "../../../engine/webgl/program";
-import { GameComponent } from "../../../engine/components/GameComponent";
-import {loadGLTF} from "../../../engine/webgl/gltf";
+import { createCubeVertices, triangle } from "../../../src/webgl/primitives";
+import { createAttributesFromArrays } from "../../../src/webgl/utils";
+import { createProgram } from "../../../src/webgl/program";
+import { GameComponent } from "../../../src/components/GameComponent";
+import {loadGLTF} from "../../../src/webgl/gltf";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
