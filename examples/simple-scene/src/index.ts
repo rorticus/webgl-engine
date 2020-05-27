@@ -7,6 +7,7 @@ import { createAttributesFromArrays } from "../../../src/webgl/utils";
 import { createProgram } from "../../../src/webgl/program";
 import { GameComponent } from "../../../src/components/GameComponent";
 import {loadGLTF} from "../../../src/webgl/gltf";
+import {OrbitCamera} from "../../../src/cameras/OrbitCamera";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -101,13 +102,38 @@ const engine = new Engine(canvas);
 const program = createProgram(engine.gl, simpleVertex, simpleFragment);
 
 const pizzaScene = loadGLTF(engine.gl, program, require('./pizza.json'));
-console.log(pizzaScene);
-pizzaScene.addComponent(new Rotater());
+
+const orbitCamera = new OrbitCamera();
+
+let ox = 0, oy = 0;
+let dragging = false;
+
+function frame() {
+	if(!dragging && engine.mouseService.leftMouseDown) {
+		dragging = true;
+		ox = engine.mouseService.pointerX;
+		oy = engine.mouseService.pointerY;
+	} else if (dragging && engine.mouseService.leftMouseDown) {
+		orbitCamera.azimuth += (engine.mouseService.pointerX - ox) * -Math.PI / 128;
+		orbitCamera.elevation += (engine.mouseService.pointerY - oy) * -Math.PI / 128;
+
+		ox = engine.mouseService.pointerX;
+		oy = engine.mouseService.pointerY;
+	} else if(dragging && !engine.mouseService.leftMouseDown) {
+		dragging = false;
+	}
+	requestAnimationFrame(frame);
+}
+frame();
+
+orbitCamera.radius = 3;
+orbitCamera.elevation = -Math.PI / 4;
 
 const scene = new Scene();
+scene.camera = orbitCamera;
 scene.pointLights[0].position = vec3.fromValues(0, 0, 15);
 scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
-scene.camera.radius = 2;
+
 
 scene.addGameObject(pizzaScene);
 

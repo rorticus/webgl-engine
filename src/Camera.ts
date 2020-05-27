@@ -5,9 +5,10 @@ export class Camera {
 	zFar = 2000;
 	fov = (60 * Math.PI) / 180;
 
-    cameraAngleInRadians = 0;
-	radius = 0.5;
+	position = vec3.fromValues(0, 10, 0);
 	lookAt = vec3.fromValues(0, 0, 0);
+	right = vec3.fromValues(0, 0, 1);
+	up = vec3.fromValues(0, 1, 0);
 
 	projectionMatrix: mat4;
 	cameraMatrix: mat4;
@@ -30,14 +31,8 @@ export class Camera {
         );
 
         const cameraMatrix = mat4.create();
-        mat4.identity(cameraMatrix);
-        mat4.rotateY(cameraMatrix, cameraMatrix, this.cameraAngleInRadians);
-        mat4.translate(cameraMatrix, cameraMatrix, [0, 0, this.radius]);
 
-        const cameraPosition = [cameraMatrix[12], cameraMatrix[13], cameraMatrix[14]];
-        const up = [0, 1, 0];
-
-        mat4.targetTo(cameraMatrix, cameraPosition, this.lookAt, up);
+        mat4.targetTo(cameraMatrix, this.position, this.lookAt, this.up);
 
         const viewMatrix = mat4.create();
         mat4.invert(viewMatrix, cameraMatrix);

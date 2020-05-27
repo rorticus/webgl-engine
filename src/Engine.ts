@@ -1,5 +1,6 @@
 import { GameObject } from "./GameObject";
 import { Scene } from "./Scene";
+import {MouseService} from "./services/MouseService";
 
 export class Engine {
 	private _canvas: HTMLCanvasElement;
@@ -9,6 +10,8 @@ export class Engine {
 	private _step: number;
 	private _scene: Scene;
 	private _gl: WebGLRenderingContext;
+
+	mouseService: MouseService;
 
 	get gl() {
 		return this._gl;
@@ -48,6 +51,8 @@ export class Engine {
 		this._gdt = 0;
 		this.fps = 30;
 		this._scene = new Scene();
+
+		this.mouseService = new MouseService(canvas);
 
 		const frame = () => {
 			const now = Date.now();
