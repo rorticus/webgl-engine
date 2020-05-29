@@ -25,17 +25,21 @@ uniform vec3 u_lightWorldPosition[NUM_POSITIONAL_LIGHTS];
 
 attribute vec3 a_position;
 attribute vec3 a_normal;
+attribute vec2 a_texcoord_0;
 
 varying vec3 v_normal;
 varying vec3 v_surfaceToLight[NUM_POSITIONAL_LIGHTS];
 varying vec3 v_position;
+varying vec2 v_texcoord0;
  
 void main() {
   vec4 surfacePosition = u_matrix * vec4(a_position, 1.0);
 	
   gl_Position = u_projectionMatrix * surfacePosition;
   v_normal = mat3(u_worldInverseTranspose) * a_normal;
-  v_position = surfacePosition.xyz; 
+  v_position = surfacePosition.xyz;
+  
+  v_texcoord0 = a_texcoord_0; 
   
   // point lighting
   vec3 surfaceWorldPosition = surfacePosition.xyz;
@@ -51,6 +55,7 @@ precision mediump float;
 
 uniform vec3 u_color;
 uniform vec3 u_ambientColor;
+uniform sampler2D u_texture0;
 
 const int NUM_POSITIONAL_LIGHTS = 2;
 
@@ -58,6 +63,7 @@ varying vec3 v_normal;
 varying vec3 v_surfaceToLight[NUM_POSITIONAL_LIGHTS];
 uniform vec3 u_lightWorldColor[NUM_POSITIONAL_LIGHTS];
 varying vec3 v_position;
+varying vec2 v_texcoord0;
 
 vec3 calculateAmbientColor(void) {
 	return u_ambientColor;
@@ -70,7 +76,7 @@ vec3 calculatePositionalLights(vec3 normal) {
 		vec3 lightDirection = normalize(v_surfaceToLight[i]);
 		float light = max(dot(normal, -lightDirection), 0.0);
 		
-		diffuse += u_lightWorldColor[i] * u_color * light;				
+		diffuse += u_lightWorldColor[i] * texture2D(u_texture0, v_texcoord0).xyz * light;				
 	}
 	
 	return diffuse;
@@ -101,7 +107,7 @@ const engine = new Engine(canvas);
 
 const program = createProgram(engine.gl, simpleVertex, simpleFragment);
 
-const pizzaScene = loadGLTF(engine.gl, program, require('./pizza.json'));
+const texturedCube = loadGLTF(engine.gl, program, require('./textured-cube.json'));
 
 const orbitCamera = new OrbitCamera();
 
@@ -126,16 +132,17 @@ function frame() {
 }
 frame();
 
-orbitCamera.radius = 3;
+orbitCamera.radius = 5;
 orbitCamera.elevation = -Math.PI / 4;
 
 const scene = new Scene();
 scene.camera = orbitCamera;
-scene.pointLights[0].position = vec3.fromValues(0, 0, 15);
+scene.pointLights[0].position = vec3.fromValues(0, 5, 15);
 scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
 
+scene.addGameObject(texturedCube);
 
-scene.addGameObject(pizzaScene);
+console.log(texturedCube);
 
 engine.scene = scene;
 engine.start();

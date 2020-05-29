@@ -16,8 +16,13 @@ export interface ProgramInfo {
 	attribSetters: Record<string, AttribSetter>;
 }
 
+export interface GlTexture {
+	texture: WebGLTexture;
+	type: number;
+}
+
 export interface BufferInfo {
-	attribs: Record<string, any>;
+	attribs: Record<string, GlBufferAndView | GlTexture>;
 	indices?: WebGLBuffer;
 	numElements?: number;
 	elementType?: number;

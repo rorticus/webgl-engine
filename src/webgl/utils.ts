@@ -78,8 +78,12 @@ function setterForUniform(
 			return (v: Float32List) => {
 				gl.uniformMatrix4fv(location, false, v);
 			};
+		case gl.SAMPLER_2D:
+			return (v: number) => {
+				gl.uniform1i(location, v);
+			};
 		default:
-			console.error(`Invali uniform type ${info.type}`, info);
+			console.error(`Invalid uniform type ${info.type}`, info);
 			throw new Error(`Invalid uniform type ${info.type}`);
 	}
 }
@@ -238,6 +242,29 @@ export function createBufferFromTypedArray(
 	gl.bufferData(type, typedArray, gl.STATIC_DRAW);
 
 	return buffer;
+}
+
+export function createTexture(
+	gl: WebGLRenderingContext,
+	type = gl.TEXTURE_2D
+) {
+	const texture = gl.createTexture();
+	gl.bindTexture(type, texture);
+
+	// fill it in with a temporary image
+	gl.texImage2D(
+		type,
+		0,
+		gl.RGBA,
+		1,
+		1,
+		0,
+		gl.RGBA,
+		gl.UNSIGNED_BYTE,
+		new Uint8Array([0, 0, 255, 255])
+	);
+
+	return texture;
 }
 
 export function createAttribsFromArrays(

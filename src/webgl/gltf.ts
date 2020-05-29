@@ -3,11 +3,13 @@ import {
 	GlAccessor,
 	GlAccessorType,
 	GlBuffer,
+	GlBufferAndView,
 	GlBufferView,
 	ProgramInfo,
 } from "./interfaces";
 import {
 	createBufferFromTypedArray,
+	createTexture,
 	nativeArrayFromAccessor,
 	numberOfComponentsForType,
 } from "./utils";
@@ -31,7 +33,10 @@ export interface GltfMaterial {
 	doubleSided?: boolean;
 	pbrMetallicRoughness?: {
 		baseColorFactor?: [number, number, number, number];
-		baseColorTexture?: number;
+		baseColorTexture?: {
+			index: number;
+			texCoord: number;
+		};
 		metallicFactor?: number;
 		roughnessFactor?: number;
 		metallicRoughnessTexture?: number;
@@ -50,6 +55,13 @@ export interface GltfNode {
 	scale?: [number, number, number];
 	mesh?: number;
 	children?: number[];
+}
+
+export interface GltfImage {
+	uri?: string;
+	mimeType?: string;
+	bufferView?: number;
+	name?: string;
 }
 
 export interface GltfScene {
@@ -89,6 +101,7 @@ export interface GltfRoot {
 	scenes?: GltfScene[];
 	scene?: number;
 	nodes?: GltfNode[];
+	images?: GltfImage[];
 }
 
 export function loadGLTF(
@@ -163,7 +176,12 @@ export function loadGLTF(
 						attributes: createAttributesFromPrimitive(gl, accessors, primitive),
 						uniforms:
 							primitive.material !== undefined
-								? materialToUniforms(json.materials[primitive.material])
+								? materialToUniforms(
+										gl,
+										json,
+										json.materials[primitive.material],
+										bufferViews
+								  )
 								: {
 										u_color: vec3.fromValues(1.0, 0.0, 0.0),
 								  },
@@ -219,7 +237,7 @@ export function createAttributesFromPrimitive(
 					normalize: false,
 					stride: 0,
 					offset: 0,
-				},
+				} as GlBufferAndView,
 			};
 		}, {}),
 	};
@@ -239,11 +257,60 @@ export function createAttributesFromPrimitive(
 	return bufferInfo;
 }
 
-export function materialToUniforms(material: GltfMaterial) {
+function Uint8ToBase64(u8Arr: Uint8Array){
+	var CHUNK_SIZE = 0x8000; //arbitrary number
+	var index = 0;
+	var length = u8Arr.length;
+	var result = '';
+	var slice;
+	while (index < length) {
+		slice = u8Arr.subarray(index, Math.min(index + CHUNK_SIZE, length));
+		result += String.fromCharCode.apply(null, slice);
+		index += CHUNK_SIZE;
+	}
+	return btoa(result);
+}
+
+export function materialToUniforms(
+	gl: WebGLRenderingContext,
+	root: GltfRoot,
+	material: GltfMaterial,
+	bufferViews: GlBufferView[]
+) {
 	const { pbrMetallicRoughness } = material;
 
 	if (pbrMetallicRoughness) {
-		const { baseColorFactor = [1, 1, 1, 1] } = pbrMetallicRoughness;
+		const {
+			baseColorFactor = [1, 1, 1, 1],
+			baseColorTexture,
+		} = pbrMetallicRoughness;
+
+		if (baseColorTexture) {
+			const texture = createTexture(gl, gl.TEXTURE_2D);
+
+			const gltfImage = root.images[baseColorTexture.index];
+			const bufferView = bufferViews[gltfImage.bufferView];
+
+			const nativeArray = new Uint8Array(
+				bufferView.buffer.arrayBuffer,
+				bufferView.byteOffset,
+				bufferView.byteLength
+			);
+			//
+			const image = new Image();
+			image.onload = () => {
+				gl.bindTexture(gl.TEXTURE_2D, texture);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+				gl.generateMipmap(gl.TEXTURE_2D);
+			};
+			image.src =
+				`data:${gltfImage.mimeType};base64,${Uint8ToBase64(nativeArray)}`;
+
+			return {
+				u_color: [1, 1, 1],
+				[`u_texture${baseColorTexture.texCoord}`]: texture,
+			};
+		}
 
 		return {
 			u_color: [baseColorFactor[0], baseColorFactor[1], baseColorFactor[2]],
