@@ -80,6 +80,12 @@ function setterForUniform(
 			};
 		case gl.SAMPLER_2D:
 			return (v: number) => {
+				gl.bindTexture(gl.TEXTURE_2D, v);
+				gl.uniform1i(location, v);
+			};
+		case gl.SAMPLER_CUBE:
+			return (v: number) => {
+				gl.bindTexture(gl.TEXTURE_CUBE_MAP, v);
 				gl.uniform1i(location, v);
 			};
 		default:
@@ -244,16 +250,41 @@ export function createBufferFromTypedArray(
 	return buffer;
 }
 
-export function createTexture(
-	gl: WebGLRenderingContext,
-	type = gl.TEXTURE_2D
-) {
+export function createTexture(gl: WebGLRenderingContext, type = gl.TEXTURE_2D) {
 	const texture = gl.createTexture();
 	gl.bindTexture(type, texture);
 
-	// fill it in with a temporary image
+	gl.texParameteri(type, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	gl.texParameteri(type, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+	if (type !== gl.TEXTURE_CUBE_MAP) {
+		// fill it in with a temporary image
+		gl.texImage2D(
+			type,
+			0,
+			gl.RGBA,
+			1,
+			1,
+			0,
+			gl.RGBA,
+			gl.UNSIGNED_BYTE,
+			new Uint8Array([0, 0, 255, 255])
+		);
+	}
+
+	return texture;
+}
+
+export function loadTextureFromSource(
+	gl: WebGLRenderingContext,
+	texture: WebGLTexture,
+	type: GLenum,
+	target: GLenum,
+	source: string
+) {
+	gl.bindTexture(type, texture);
 	gl.texImage2D(
-		type,
+		target,
 		0,
 		gl.RGBA,
 		1,
@@ -261,7 +292,71 @@ export function createTexture(
 		0,
 		gl.RGBA,
 		gl.UNSIGNED_BYTE,
-		new Uint8Array([0, 0, 255, 255])
+		new Uint8Array([0, 0, 0, 0])
+	);
+
+	const image = new Image();
+	image.onload = () => {
+		gl.bindTexture(type, texture);
+		gl.texImage2D(target, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+	};
+	image.src = source;
+}
+
+export function createSkyboxTexture(
+	gl: WebGLRenderingContext,
+	sources: {
+		positiveX: string;
+		negativeX: string;
+		positiveY: string;
+		negativeY: string;
+		positiveZ: string;
+		negativeZ: string;
+	}
+) {
+	const texture = createTexture(gl, gl.TEXTURE_CUBE_MAP);
+
+	loadTextureFromSource(
+		gl,
+		texture,
+		gl.TEXTURE_CUBE_MAP,
+		gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+		sources.positiveX
+	);
+	loadTextureFromSource(
+		gl,
+		texture,
+		gl.TEXTURE_CUBE_MAP,
+		gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+		sources.negativeX
+	);
+	loadTextureFromSource(
+		gl,
+		texture,
+		gl.TEXTURE_CUBE_MAP,
+		gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
+		sources.positiveY
+	);
+	loadTextureFromSource(
+		gl,
+		texture,
+		gl.TEXTURE_CUBE_MAP,
+		gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+		sources.negativeY
+	);
+	loadTextureFromSource(
+		gl,
+		texture,
+		gl.TEXTURE_CUBE_MAP,
+		gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
+		sources.positiveZ
+	);
+	loadTextureFromSource(
+		gl,
+		texture,
+		gl.TEXTURE_CUBE_MAP,
+		gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,
+		sources.negativeZ
 	);
 
 	return texture;
@@ -286,18 +381,20 @@ export function createAttribsFromArrays(
 		offset: 0,
 	};
 
-	attribs["a_normal"] = {
-		buffer: createBufferFromTypedArray(
-			gl,
-			new Float32Array(arrays.normal.data)
-		),
-		numItems: arrays.normal.data.length / arrays.normal.numComponents,
-		itemSize: arrays.normal.numComponents,
-		type: gl.STATIC_DRAW,
-		normalize: false,
-		stride: 0,
-		offset: 0,
-	};
+	if (arrays.normal) {
+		attribs["a_normal"] = {
+			buffer: createBufferFromTypedArray(
+				gl,
+				new Float32Array(arrays.normal.data)
+			),
+			numItems: arrays.normal.data.length / arrays.normal.numComponents,
+			itemSize: arrays.normal.numComponents,
+			type: gl.STATIC_DRAW,
+			normalize: false,
+			stride: 0,
+			offset: 0,
+		};
+	}
 
 	return attribs;
 }
@@ -320,7 +417,7 @@ export function createAttributesFromArrays(
 		);
 		bufferInfo.numElements = typedIndices.length;
 	} else {
-		bufferInfo.numElements = primitive.position.data.length / 3;
+		bufferInfo.numElements = primitive.position.data.length / primitive.position.numComponents;
 	}
 
 	return bufferInfo;

@@ -1,4 +1,4 @@
-import {Primitive, PrimitiveData} from "./interfaces";
+import { Primitive, PrimitiveData } from "./interfaces";
 
 function augmentTypedArray(typedArray: any, numComponents: number) {
 	var cursor = 0;
@@ -117,25 +117,29 @@ export function createCubeVertices(size: number) {
 export function triangle(): Primitive {
 	return {
 		position: {
-			data: [
-				3, 3, 0,
-				-3, 3, 0,
-				3, -3, 0,
-				-3, -3, 0
-			],
-			numComponents: 3
+			data: [3, 3, 0, -3, 3, 0, 3, -3, 0, -3, -3, 0],
+			numComponents: 3,
 		},
 		indices: {
 			data: [0, 2, 3, 0, 3, 1],
-			numComponents: 1
+			numComponents: 1,
 		},
 		normal: {
 			data: [],
-			numComponents: 0
+			numComponents: 0,
 		},
 		texcoord: {
 			data: [],
-			numComponents: 0
+			numComponents: 0,
+		},
+	};
+}
+
+export function quad(): Primitive {
+	return {
+		position: {
+			data: [-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1],
+			numComponents: 2,
 		}
-	}
+	};
 }

@@ -17,8 +17,8 @@ module.exports = {
                 exclude: /node_modules/
             },
             {
-                test: /\.png$/,
-                use: 'raw-loader'
+                test: /\.(png|jpg)$/,
+                use: 'file-loader'
             }
         ]
     },

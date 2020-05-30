@@ -1,7 +1,10 @@
 import { GameObject } from "./GameObject";
-import { vec3, vec4 } from "gl-matrix";
+import {mat4, vec3, vec4} from "gl-matrix";
 import { Camera } from "./Camera";
 import { Light, LightType } from "./Light";
+import {PrimitiveData, ProgramInfo, Renderable} from "./webgl/interfaces";
+import {createAttributesFromArrays, createSkyboxTexture, setBuffersAndAttributes, setUniforms} from "./webgl/utils";
+import {quad} from "./webgl/primitives";
 
 export class Scene {
 	private _gameObjects: GameObject[];
@@ -10,6 +13,8 @@ export class Scene {
 	pointLights: Light[];
 
 	camera: Camera;
+
+	skybox: Renderable;
 
 	constructor() {
 		this._gameObjects = [];
@@ -26,6 +31,29 @@ export class Scene {
 		light2.color = vec3.fromValues(0, 0, 0);
 
 		this.pointLights = [light1, light2];
+
+		this.skybox = null;
+	}
+
+	loadSkymap(gl: WebGLRenderingContext, programInfo: ProgramInfo, sources: {
+		positiveX: string;
+		negativeX: string;
+		positiveY: string;
+		negativeY: string;
+		positiveZ: string;
+		negativeZ: string;
+	}) {
+		this.skybox = {
+			programInfo,
+			renderables: [
+				{
+					attributes: createAttributesFromArrays(gl, quad()),
+					uniforms: {
+						u_skybox: createSkyboxTexture(gl, sources)
+					}
+				}
+			]
+		};
 	}
 
 	update(deltaInSeconds: number) {
@@ -61,5 +89,22 @@ export class Scene {
 		this._gameObjects.forEach((gameObject) => {
 			gameObject.render(renderContext);
 		});
+
+		if(this.skybox) {
+			gl.depthFunc(gl.LEQUAL);
+
+			const inverse = mat4.create();
+			mat4.invert(inverse, this.camera.viewProjectionMatrix);
+
+			gl.useProgram(this.skybox.programInfo.program);
+			setBuffersAndAttributes(gl, this.skybox.programInfo, this.skybox.renderables[0].attributes);
+			setUniforms(this.skybox.programInfo, {
+				...this.skybox.renderables[0].uniforms,
+				u_viewDirectionProjectionInverse: inverse
+			});
+
+			gl.drawArrays(gl.TRIANGLES, 0, this.skybox.renderables[0].attributes.numElements);
+			gl.depthFunc(gl.LESS);
+		}
 	}
 }

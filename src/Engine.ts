@@ -1,6 +1,23 @@
 import { GameObject } from "./GameObject";
 import { Scene } from "./Scene";
-import {MouseService} from "./services/MouseService";
+import { MouseService } from "./services/MouseService";
+import { ProgramInfo } from "./webgl/interfaces";
+import { createProgram } from "./webgl/program";
+
+import {
+	fragmentShader as standardFragmentShader,
+	vertexShader as standardVertexShader,
+} from "./webgl/shaders/standard";
+
+import {
+	vertexShader as skyboxVertexShader,
+	fragmentShader as skyboxFragmentShader,
+} from "./webgl/shaders/skybox";
+
+interface Programs {
+	standard: ProgramInfo;
+	skybox: ProgramInfo;
+}
 
 export class Engine {
 	private _canvas: HTMLCanvasElement;
@@ -10,6 +27,8 @@ export class Engine {
 	private _step: number;
 	private _scene: Scene;
 	private _gl: WebGLRenderingContext;
+
+	programs: Programs;
 
 	mouseService: MouseService;
 
@@ -44,6 +63,11 @@ export class Engine {
 		}
 
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+		this.programs = {
+			standard: createProgram(gl, standardVertexShader, standardFragmentShader),
+			skybox: createProgram(gl, skyboxVertexShader, skyboxFragmentShader),
+		};
 
 		this._gl = gl;
 		this._paused = true;

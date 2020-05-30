@@ -109,7 +109,7 @@ export interface PrimitiveData {
 
 export interface Primitive {
 	position: PrimitiveData;
-	texcoord: PrimitiveData;
-	normal: PrimitiveData;
+	texcoord?: PrimitiveData;
+	normal?: PrimitiveData;
 	indices?: PrimitiveData;
 }
