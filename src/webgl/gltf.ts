@@ -64,6 +64,10 @@ export interface GltfImage {
 	name?: string;
 }
 
+export interface GltfTexture {
+	source: number;
+}
+
 export interface GltfScene {
 	name?: string;
 	nodes?: number[];
@@ -102,6 +106,7 @@ export interface GltfRoot {
 	scene?: number;
 	nodes?: GltfNode[];
 	images?: GltfImage[];
+	textures?: GltfTexture[];
 }
 
 export function loadGLTF(
@@ -257,11 +262,11 @@ export function createAttributesFromPrimitive(
 	return bufferInfo;
 }
 
-function Uint8ToBase64(u8Arr: Uint8Array){
+function Uint8ToBase64(u8Arr: Uint8Array) {
 	var CHUNK_SIZE = 0x8000; //arbitrary number
 	var index = 0;
 	var length = u8Arr.length;
-	var result = '';
+	var result = "";
 	var slice;
 	while (index < length) {
 		slice = u8Arr.subarray(index, Math.min(index + CHUNK_SIZE, length));
@@ -286,30 +291,41 @@ export function materialToUniforms(
 		} = pbrMetallicRoughness;
 
 		if (baseColorTexture) {
-			const texture = createTexture(gl, gl.TEXTURE_2D);
+			const gltfTexture = root.textures[baseColorTexture.index];
+			if (gltfTexture) {
+				const texture = createTexture(gl, gl.TEXTURE_2D);
 
-			const gltfImage = root.images[baseColorTexture.index];
-			const bufferView = bufferViews[gltfImage.bufferView];
+				const gltfImage = root.images[gltfTexture.source];
+				const bufferView = bufferViews[gltfImage.bufferView];
 
-			const nativeArray = new Uint8Array(
-				bufferView.buffer.arrayBuffer,
-				bufferView.byteOffset,
-				bufferView.byteLength
-			);
-			//
-			const image = new Image();
-			image.onload = () => {
-				gl.bindTexture(gl.TEXTURE_2D, texture);
-				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-				gl.generateMipmap(gl.TEXTURE_2D);
-			};
-			image.src =
-				`data:${gltfImage.mimeType};base64,${Uint8ToBase64(nativeArray)}`;
+				const nativeArray = new Uint8Array(
+					bufferView.buffer.arrayBuffer,
+					bufferView.byteOffset,
+					bufferView.byteLength
+				);
+				//
+				const image = new Image();
+				image.onload = () => {
+					gl.bindTexture(gl.TEXTURE_2D, texture);
+					gl.texImage2D(
+						gl.TEXTURE_2D,
+						0,
+						gl.RGBA,
+						gl.RGBA,
+						gl.UNSIGNED_BYTE,
+						image
+					);
+					gl.generateMipmap(gl.TEXTURE_2D);
+				};
+				image.src = `data:${gltfImage.mimeType};base64,${Uint8ToBase64(
+					nativeArray
+				)}`;
 
-			return {
-				u_color: [1, 1, 1],
-				[`u_texture${baseColorTexture.texCoord}`]: texture,
-			};
+				return {
+					u_color: [1, 1, 1],
+					[`u_texture${baseColorTexture.texCoord}`]: texture,
+				};
+			}
 		}
 
 		return {

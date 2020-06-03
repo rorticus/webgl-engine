@@ -23,7 +23,7 @@ const engine = new Engine(canvas);
 const texturedCube = loadGLTF(
 	engine.gl,
 	engine.programs.standard,
-	require("./textured-cube.json")
+	require("./animated.json")
 );
 
 const orbitCamera = new OrbitCamera();
