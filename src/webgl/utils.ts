@@ -107,7 +107,14 @@ function setterForAttrib(
 			return (b: GlBufferAndView) => {
 				gl.bindBuffer(gl.ARRAY_BUFFER, b.buffer);
 				gl.enableVertexAttribArray(location);
-				gl.vertexAttribPointer(location, b.itemSize, gl.FLOAT, false, 0, 0);
+				gl.vertexAttribPointer(
+					location,
+					b.itemSize,
+					b.componentType || gl.FLOAT,
+					false,
+					0,
+					0
+				);
 			};
 		case gl.INT:
 		case gl.INT_VEC2:
@@ -417,7 +424,8 @@ export function createAttributesFromArrays(
 		);
 		bufferInfo.numElements = typedIndices.length;
 	} else {
-		bufferInfo.numElements = primitive.position.data.length / primitive.position.numComponents;
+		bufferInfo.numElements =
+			primitive.position.data.length / primitive.position.numComponents;
 	}
 
 	return bufferInfo;

@@ -22,7 +22,7 @@ const engine = new Engine(canvas);
 
 const texturedCube = loadGLTF(
 	engine.gl,
-	engine.programs.standard,
+	engine.programs.skinned,
 	require("./animated.json")
 );
 
@@ -69,6 +69,7 @@ scene.loadSkymap(engine.gl, engine.programs.skybox, {
 	positiveZ: require("./skybox6.jpg").default,
 });
 
+texturedCube.scale = vec3.fromValues(50, 50, 50);
 scene.addGameObject(texturedCube);
 
 engine.scene = scene;

@@ -201,6 +201,14 @@ export class GameObject {
 				u_lightWorldColor: pointLights.map((light) => light.color),
 			});
 
+			if (this.renderable.skin) {
+				this.renderable.skin.update(gl, this);
+				setUniforms(this.renderable.programInfo, {
+					u_jointTexture: this.renderable.skin.jointTexture,
+					u_numJoints: this.renderable.skin.joints.length,
+				});
+			}
+
 			this.renderable.renderables.forEach((renderable) => {
 				setUniforms(this.renderable.programInfo, renderable.uniforms);
 

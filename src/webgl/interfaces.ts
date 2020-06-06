@@ -1,3 +1,5 @@
+import { GameObject } from "../GameObject";
+
 export interface UniformSetter {
 	setter: (v: any) => void;
 	location: WebGLUniformLocation;
@@ -33,8 +35,15 @@ export interface SingleRenderable {
 	uniforms: Record<string, any>;
 }
 
+export interface RenderableSkin {
+	update(gl: WebGLRenderingContext, node: GameObject): void;
+	jointTexture: WebGLTexture;
+	joints: any[];
+}
+
 export interface Renderable {
 	programInfo: ProgramInfo;
+	skin?: RenderableSkin;
 	renderables: SingleRenderable[];
 }
 
@@ -46,6 +55,7 @@ export interface GlBufferAndView {
 	normalize: boolean;
 	stride: number;
 	offset: number;
+	componentType?: number;
 }
 
 export interface GlBuffer {

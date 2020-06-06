@@ -15,6 +15,7 @@ import {
 } from "./utils";
 import { quat, vec3 } from "gl-matrix";
 import { GameObject } from "../GameObject";
+import { Skin } from "./Skin";
 
 export interface GltfPrimitive {
 	attributes: Record<string, number>;
@@ -55,6 +56,14 @@ export interface GltfNode {
 	scale?: [number, number, number];
 	mesh?: number;
 	children?: number[];
+	skin?: number;
+}
+
+export interface GltfSkin {
+	inverseBindMatrices?: number;
+	skeleton?: number;
+	joints: number[];
+	name?: string;
 }
 
 export interface GltfImage {
@@ -107,6 +116,7 @@ export interface GltfRoot {
 	nodes?: GltfNode[];
 	images?: GltfImage[];
 	textures?: GltfTexture[];
+	skins?: GltfSkin[];
 }
 
 export function loadGLTF(
@@ -206,6 +216,17 @@ export function loadGLTF(
 		}
 	});
 
+	const skins = json.skins.map((skin) => {
+		const joints = skin.joints.map((index) => gltfNodes[index]);
+		return new Skin(gl, joints, accessors[skin.inverseBindMatrices]);
+	});
+
+	nodes.forEach((node, index) => {
+		if (node.skin !== undefined && gltfNodes[index].renderable) {
+			gltfNodes[index].renderable.skin = skins[node.skin];
+		}
+	});
+
 	if (sceneIndex < scenes.length) {
 		const { name = "", nodes = [] } = scenes[sceneIndex];
 
@@ -242,6 +263,7 @@ export function createAttributesFromPrimitive(
 					normalize: false,
 					stride: 0,
 					offset: 0,
+					componentType: accessor.componentType
 				} as GlBufferAndView,
 			};
 		}, {}),
