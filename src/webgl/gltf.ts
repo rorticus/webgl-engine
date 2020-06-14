@@ -13,7 +13,7 @@ import {
 	nativeArrayFromAccessor,
 	numberOfComponentsForType,
 } from "./utils";
-import { quat, vec3 } from "gl-matrix";
+import { mat4, quat, vec3 } from "gl-matrix";
 import { GameObject } from "../GameObject";
 import { Skin } from "./Skin";
 
@@ -54,6 +54,24 @@ export interface GltfNode {
 	rotation?: [number, number, number, number];
 	translation?: [number, number, number];
 	scale?: [number, number, number];
+	matrix?: [
+		number,
+		number,
+		number,
+		number,
+		number,
+		number,
+		number,
+		number,
+		number,
+		number,
+		number,
+		number,
+		number,
+		number,
+		number,
+		number
+	];
 	mesh?: number;
 	children?: number[];
 	skin?: number;
@@ -181,6 +199,13 @@ export function loadGLTF(
 			n.scale = vec3.fromValues(...node.scale);
 		}
 
+		if (node.matrix) {
+			const matrix = mat4.fromValues(...node.matrix);
+			mat4.getTranslation(n.position, matrix);
+			mat4.getRotation(n.rotation, matrix);
+			mat4.getScaling(n.scale, matrix);
+		}
+
 		if (node.mesh !== undefined) {
 			const mesh = json.meshes[node.mesh];
 
@@ -218,6 +243,11 @@ export function loadGLTF(
 
 	const skins = json.skins.map((skin) => {
 		const joints = skin.joints.map((index) => gltfNodes[index]);
+		// joints.forEach((joint) => {
+		// 	joint.rotation = quat.create();
+		// 	joint.position = vec3.create();
+		// 	joint.scale = vec3.fromValues(1, 1, 1);
+		// });
 		return new Skin(gl, joints, accessors[skin.inverseBindMatrices]);
 	});
 
@@ -255,7 +285,7 @@ export function createAttributesFromPrimitive(
 					buffer: createBufferFromTypedArray(
 						gl,
 						nativeArrayFromAccessor(gl, accessor),
-						accessors[primitive.indices].bufferView.target
+						accessor.bufferView.target
 					),
 					numItems: accessor.count,
 					itemSize: numberOfComponentsForType(accessor.type),
@@ -263,14 +293,14 @@ export function createAttributesFromPrimitive(
 					normalize: false,
 					stride: 0,
 					offset: 0,
-					componentType: accessor.componentType
+					componentType: accessor.componentType,
 				} as GlBufferAndView,
 			};
 		}, {}),
 	};
 
 	let indices = primitive.indices;
-	if (indices) {
+	if (indices !== undefined) {
 		bufferInfo.indices = createBufferFromTypedArray(
 			gl,
 			nativeArrayFromAccessor(gl, accessors[primitive.indices]),
@@ -278,7 +308,7 @@ export function createAttributesFromPrimitive(
 		);
 		bufferInfo.numElements = accessors[primitive.indices].count;
 	} else {
-		bufferInfo.numElements = 0;
+		bufferInfo.numElements = accessors[primitive.attributes['POSITION']].count;
 	}
 
 	return bufferInfo;
@@ -318,35 +348,57 @@ export function materialToUniforms(
 				const texture = createTexture(gl, gl.TEXTURE_2D);
 
 				const gltfImage = root.images[gltfTexture.source];
-				const bufferView = bufferViews[gltfImage.bufferView];
+				if(gltfImage.uri) {
+					const image = new Image();
+					image.onload = () => {
+						gl.bindTexture(gl.TEXTURE_2D, texture);
+						gl.texImage2D(
+							gl.TEXTURE_2D,
+							0,
+							gl.RGBA,
+							gl.RGBA,
+							gl.UNSIGNED_BYTE,
+							image
+						);
+						gl.generateMipmap(gl.TEXTURE_2D);
+					};
+					image.src = gltfImage.uri;
 
-				const nativeArray = new Uint8Array(
-					bufferView.buffer.arrayBuffer,
-					bufferView.byteOffset,
-					bufferView.byteLength
-				);
-				//
-				const image = new Image();
-				image.onload = () => {
-					gl.bindTexture(gl.TEXTURE_2D, texture);
-					gl.texImage2D(
-						gl.TEXTURE_2D,
-						0,
-						gl.RGBA,
-						gl.RGBA,
-						gl.UNSIGNED_BYTE,
-						image
+					return {
+						u_color: [1, 1, 1],
+						[`u_texture${baseColorTexture.texCoord || 0}`]: texture,
+					};
+				} else if(gltfImage.bufferView) {
+					const bufferView = bufferViews[gltfImage.bufferView];
+
+					const nativeArray = new Uint8Array(
+						bufferView.buffer.arrayBuffer,
+						bufferView.byteOffset,
+						bufferView.byteLength
 					);
-					gl.generateMipmap(gl.TEXTURE_2D);
-				};
-				image.src = `data:${gltfImage.mimeType};base64,${Uint8ToBase64(
-					nativeArray
-				)}`;
+					//
+					const image = new Image();
+					image.onload = () => {
+						gl.bindTexture(gl.TEXTURE_2D, texture);
+						gl.texImage2D(
+							gl.TEXTURE_2D,
+							0,
+							gl.RGBA,
+							gl.RGBA,
+							gl.UNSIGNED_BYTE,
+							image
+						);
+						gl.generateMipmap(gl.TEXTURE_2D);
+					};
+					image.src = `data:${gltfImage.mimeType};base64,${Uint8ToBase64(
+						nativeArray
+					)}`;
 
-				return {
-					u_color: [1, 1, 1],
-					[`u_texture${baseColorTexture.texCoord}`]: texture,
-				};
+					return {
+						u_color: [1, 1, 1],
+						[`u_texture${baseColorTexture.texCoord}`]: texture,
+					};
+				}
 			}
 		}
 

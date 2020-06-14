@@ -22,7 +22,6 @@ import {
 interface Programs {
 	standard: ProgramInfo;
 	skybox: ProgramInfo;
-	skinned: ProgramInfo;
 }
 
 export class Engine {
@@ -68,15 +67,14 @@ export class Engine {
 			throw new Error("Failed to initialize webgl");
 		}
 
-		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
 		// getting this extension has the side effect of allowing gl.FLOAT texture types (which we need for skinning)
-		gl.getExtension('OES_texture_float');
+		gl.getExtension("OES_texture_float");
 
 		this.programs = {
 			standard: createProgram(gl, standardVertexShader, standardFragmentShader),
 			skybox: createProgram(gl, skyboxVertexShader, skyboxFragmentShader),
-			skinned: createProgram(gl, skinnedVertexShader, skinnedFragmentShader),
 		};
 
 		this._gl = gl;

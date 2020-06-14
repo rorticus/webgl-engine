@@ -199,13 +199,16 @@ export class GameObject {
 				u_ambientColor,
 				u_lightWorldPosition: pointLights.map((light) => light.position),
 				u_lightWorldColor: pointLights.map((light) => light.color),
+				u_useSkinning: false,
 			});
 
 			if (this.renderable.skin) {
 				this.renderable.skin.update(gl, this);
 				setUniforms(this.renderable.programInfo, {
 					u_jointTexture: this.renderable.skin.jointTexture,
+					u_bones: (this.renderable.skin as any).jointMatrices,
 					u_numJoints: this.renderable.skin.joints.length,
+					u_useSkinning: true,
 				});
 			}
 
@@ -218,12 +221,16 @@ export class GameObject {
 					renderable.attributes
 				);
 
-				gl.drawElements(
-					gl.TRIANGLES,
-					renderable.attributes.numElements,
-					gl.UNSIGNED_SHORT,
-					0
-				);
+				if (renderable.attributes.indices) {
+					gl.drawElements(
+						gl.TRIANGLES,
+						renderable.attributes.numElements,
+						gl.UNSIGNED_SHORT,
+						0
+					);
+				} else {
+					gl.drawArrays(gl.TRIANGLES, 0, renderable.attributes.numElements);
+				}
 			});
 		}
 

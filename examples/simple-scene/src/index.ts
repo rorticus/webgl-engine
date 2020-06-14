@@ -22,9 +22,12 @@ const engine = new Engine(canvas);
 
 const texturedCube = loadGLTF(
 	engine.gl,
-	engine.programs.skinned,
-	require("./animated.json")
+	engine.programs.standard,
+	require("./fox.json")
 );
+
+// const joint1 = texturedCube.getObjectById("leg_joint_L_1", true);
+// joint1.rotate(0,  (45 * Math.PI) / 180, 0);
 
 const orbitCamera = new OrbitCamera();
 
@@ -52,12 +55,13 @@ function frame() {
 }
 frame();
 
-orbitCamera.radius = 5;
-orbitCamera.elevation = -Math.PI / 4;
+orbitCamera.radius = 150;
+orbitCamera.elevation = 150;
+orbitCamera.azimuth = 45 * Math.PI / 180;
 
 const scene = new Scene();
 scene.camera = orbitCamera;
-scene.pointLights[0].position = vec3.fromValues(0, 5, 15);
+scene.pointLights[0].position = vec3.fromValues(0, 5, 150);
 scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
 
 scene.loadSkymap(engine.gl, engine.programs.skybox, {
@@ -69,7 +73,6 @@ scene.loadSkymap(engine.gl, engine.programs.skybox, {
 	positiveZ: require("./skybox6.jpg").default,
 });
 
-texturedCube.scale = vec3.fromValues(50, 50, 50);
 scene.addGameObject(texturedCube);
 
 engine.scene = scene;

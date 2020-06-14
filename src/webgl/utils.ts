@@ -20,7 +20,8 @@ function isBuiltIn(info: WebGLActiveInfo) {
 function setterForUniform(
 	gl: WebGLRenderingContext,
 	info: WebGLActiveInfo,
-	location: WebGLUniformLocation
+	location: WebGLUniformLocation,
+	unit = 0
 ) {
 	switch (info.type) {
 		case gl.FLOAT:
@@ -75,13 +76,24 @@ function setterForUniform(
 				gl.uniformMatrix3fv(location, false, v);
 			};
 		case gl.FLOAT_MAT4:
-			return (v: Float32List) => {
-				gl.uniformMatrix4fv(location, false, v);
-			};
+			if (info.size > 1) {
+				return (v: Float32List[]) => {
+					const fl = new Float32Array(info.size * 16);
+					for (let i = 0; i < v.length; i++) {
+						fl.set(v[i], i * 16);
+					}
+					gl.uniformMatrix4fv(location, false, fl);
+				};
+			} else {
+				return (v: Float32List) => {
+					gl.uniformMatrix4fv(location, false, v);
+				};
+			}
 		case gl.SAMPLER_2D:
-			return (v: number) => {
+			return (v: WebGLTexture) => {
+				gl.uniform1i(location, unit);
+				gl.activeTexture(gl.TEXTURE0 + unit);
 				gl.bindTexture(gl.TEXTURE_2D, v);
-				gl.uniform1i(location, v);
 			};
 		case gl.SAMPLER_CUBE:
 			return (v: number) => {
@@ -112,8 +124,8 @@ function setterForAttrib(
 					b.itemSize,
 					b.componentType || gl.FLOAT,
 					false,
-					0,
-					0
+					b.stride,
+					b.offset
 				);
 			};
 		case gl.INT:
@@ -123,7 +135,14 @@ function setterForAttrib(
 			return (b: GlBufferAndView) => {
 				gl.bindBuffer(gl.ARRAY_BUFFER, b.buffer);
 				gl.enableVertexAttribArray(location);
-				gl.vertexAttribPointer(location, b.itemSize, gl.INT, false, 0, 0);
+				gl.vertexAttribPointer(
+					location,
+					b.itemSize,
+					b.componentType || gl.INT,
+					false,
+					b.stride,
+					b.offset
+				);
 			};
 		default:
 			console.error(`Invalid attribute type ${info.type}`, info);
@@ -138,6 +157,7 @@ export function createUniformSetters(
 	const numUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
 
 	let uniforms: Record<string, UniformSetter> = {};
+	let textureUnit = 0;
 
 	for (let i = 0; i < numUniforms; i++) {
 		const uniformInfo = gl.getActiveUniform(program, i);
@@ -153,10 +173,14 @@ export function createUniformSetters(
 		const location = gl.getUniformLocation(program, uniformInfo.name);
 		if (location) {
 			uniforms[name] = {
-				setter: setterForUniform(gl, uniformInfo, location),
+				setter: setterForUniform(gl, uniformInfo, location, textureUnit),
 				location,
 				info: uniformInfo,
 			};
+
+			if (uniformInfo.type === gl.SAMPLER_2D) {
+				textureUnit += uniformInfo.size;
+			}
 		}
 	}
 
@@ -220,12 +244,27 @@ function setAttributes(
 	}
 }
 
+export function disableExistingAttributes(
+	gl: WebGLRenderingContext,
+	programInfo: ProgramInfo
+) {
+	for (const attrib in programInfo.attribSetters) {
+		gl.disableVertexAttribArray(programInfo.attribSetters[attrib].location);
+	}
+}
+
 export function setBuffersAndAttributes(
 	gl: WebGLRenderingContext,
 	programInfo: ProgramInfo,
-	buffers: BufferInfo
+	buffers: BufferInfo,
+	disableExisting = true
 ) {
+	if (disableExisting) {
+		disableExistingAttributes(gl, programInfo);
+	}
+
 	setAttributes(programInfo.attribSetters, buffers.attribs);
+
 	if (buffers.indices) {
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
 	}
@@ -251,6 +290,7 @@ export function createBufferFromTypedArray(
 	type: number = gl.ARRAY_BUFFER
 ) {
 	const buffer = gl.createBuffer();
+
 	gl.bindBuffer(type, buffer);
 	gl.bufferData(type, typedArray, gl.STATIC_DRAW);
 

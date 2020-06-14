@@ -22,7 +22,8 @@ export class Skin {
 			this.inverseBindMatrices.push(
 				new Float32Array(
 					inverseBindMatrixData.bufferView.buffer.arrayBuffer,
-					inverseBindMatrixData.byteOffset +
+					inverseBindMatrixData.bufferView.byteOffset +
+						inverseBindMatrixData.byteOffset +
 						Float32Array.BYTES_PER_ELEMENT * 16 * i,
 					16
 				)
@@ -49,14 +50,9 @@ export class Skin {
 		mat4.invert(globalWorldInverse, node.worldMatrix);
 
 		for (let j = 0; j < this.joints.length; j++) {
-			const joint = this.joints[j];
-			const dst = this.jointMatrices[j];
-			mat4.multiply(globalWorldInverse, joint.worldMatrix, dst as mat4);
-			mat4.multiply(
-				dst as mat4,
-				this.inverseBindMatrices[j] as mat4,
-				dst as mat4
-			);
+			const dst = this.jointMatrices[j] as mat4;
+			mat4.mul(dst, globalWorldInverse, this.joints[j].worldMatrix);
+			mat4.mul(dst, dst, this.inverseBindMatrices[j] as mat4);
 		}
 
 		gl.bindTexture(gl.TEXTURE_2D, this.jointTexture);
@@ -71,5 +67,28 @@ export class Skin {
 			gl.FLOAT,
 			this.jointData
 		);
+
+		// const fb = gl.createFramebuffer();
+		// gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+		// gl.framebufferTexture2D(
+		// 	gl.FRAMEBUFFER,
+		// 	gl.COLOR_ATTACHMENT0,
+		// 	gl.TEXTURE_2D,
+		// 	this.jointTexture,
+		// 	0
+		// );
+		//
+		// const textureData = new Float32Array(32);
+		// gl.readPixels(0, 0, 4, 2, gl.RGBA, gl.FLOAT, textureData);
+		//
+		// console.table(
+		// 	Array.from(textureData).map((td, index) => [
+		// 		td,
+		// 		this.jointData[index],
+		// 	])
+		// );
+		// // console.log(textureData);
+		// // console.log(this.jointData);
+		// debugger;
 	}
 }
