@@ -1,16 +1,8 @@
-import { Engine } from "../../../src/Engine";
-import { Scene } from "../../../src/Scene";
-import { GameObject } from "../../../src/GameObject";
-import { vec3 } from "gl-matrix";
-import { createCubeVertices, triangle } from "../../../src/webgl/primitives";
-import {
-	createAttributesFromArrays,
-	createSkyboxTexture,
-} from "../../../src/webgl/utils";
-import { createProgram } from "../../../src/webgl/program";
-import { GameComponent } from "../../../src/components/GameComponent";
-import { loadGLTF } from "../../../src/webgl/gltf";
-import { OrbitCamera } from "../../../src/cameras/OrbitCamera";
+import {Engine} from "../../../src/Engine";
+import {Scene} from "../../../src/Scene";
+import {vec3} from "gl-matrix";
+import {loadGLTF} from "../../../src/webgl/gltf";
+import {OrbitCamera} from "../../../src/cameras/OrbitCamera";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -26,8 +18,8 @@ const texturedCube = loadGLTF(
 	require("./fox.json")
 );
 
-// const joint1 = texturedCube.getObjectById("leg_joint_L_1", true);
-// joint1.rotate(0,  (45 * Math.PI) / 180, 0);
+// const joint1 = texturedCube.getObjectById("b_Head_05", true);
+// joint1.rotate(0,  0, (-45 * Math.PI) / 180);
 
 const orbitCamera = new OrbitCamera();
 

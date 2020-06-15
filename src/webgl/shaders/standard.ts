@@ -26,7 +26,7 @@ varying vec2 v_texcoord0;
 #define ROW3_U ((0.5 + 3.0) / 4.)
 
 mat4 getBoneMatrix(float jointNdx) {
-  float v = 1.0 - (jointNdx + 0.5) / u_numJoints;
+  float v = (jointNdx + 0.5) / u_numJoints;
   return mat4(
     texture2D(u_jointTexture, vec2(ROW0_U, v)),
     texture2D(u_jointTexture, vec2(ROW1_U, v)),

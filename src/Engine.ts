@@ -122,7 +122,10 @@ export class Engine {
 			return;
 		}
 
-		this._scene.update(deltaInSeconds);
+		this._scene.update({
+			services: {},
+			deltaInSeconds
+		});
 	}
 
 	render() {

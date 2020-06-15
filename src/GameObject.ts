@@ -1,8 +1,12 @@
 import { mat3, mat4, quat, vec3 } from "gl-matrix";
-import { GameComponent } from "./components/GameComponent";
 import { setBuffersAndAttributes, setUniforms } from "./webgl/utils";
 import { Renderable } from "./webgl/interfaces";
-import { SceneRenderContext } from "./interfaces";
+import {
+	GameComponent,
+	GameComponentContext,
+	SceneRenderContext,
+} from "./interfaces";
+import { Engine } from "./Engine";
 
 export class GameObject {
 	id: string;
@@ -174,13 +178,11 @@ export class GameObject {
 		this.children.forEach((child) => child.computeWorldMatrix());
 	}
 
-	update(deltaInSeconds: number) {
+	update(context: GameComponentContext) {
 		this.computeWorldMatrix();
-		this.components.forEach((component) =>
-			component.update(this, deltaInSeconds)
-		);
+		this.components.forEach((component) => component(context, this));
 
-		this.children.forEach((child) => child.update(deltaInSeconds));
+		this.children.forEach((child) => child.update(context));
 	}
 
 	render(context: SceneRenderContext) {

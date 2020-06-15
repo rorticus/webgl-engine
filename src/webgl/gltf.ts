@@ -17,6 +17,38 @@ import { mat4, quat, vec3 } from "gl-matrix";
 import { GameObject } from "../GameObject";
 import { Skin } from "./Skin";
 
+export interface GltfAnimationSampler {
+	/** The index of an accessor containing keyframe input values, e.g., time **/
+	input: number;
+	/** Interpolation algorithm, default LINEAR **/
+	interpolation?: string;
+	/** The index of an accessor, containing keyframe output values. */
+	output: number;
+}
+
+export interface GltfAnimationChannel {
+	/** The index of a sampler in this animation used to compute the value for the target. **/
+	sampler: number;
+	/** The index of the node and TRS property to target. **/
+	target: {
+		/** The index of the node to target. **/
+		node?: number;
+		/**
+		 * The name of the node's TRS property to modify, or the "weights" of the Morph Targets it instantiates.
+		 * For the "translation" property, the values that are provided by the sampler are the translation along the
+		 * x, y, and z axes. For the "rotation" property, the values are a quaternion in the order (x, y, z, w), where
+		 * w is the scalar. For the "scale" property, the values are the scaling factors along the x, y, and z axes.
+		 */
+		path: 'rotation' | 'scale' | 'translation' | 'weights';
+	};
+}
+
+export interface GltfAnimation {
+	channels: GltfAnimationChannel[];
+	samplers: GltfAnimationSampler[];
+	name?: string;
+}
+
 export interface GltfPrimitive {
 	attributes: Record<string, number>;
 	indices?: number;
@@ -308,7 +340,7 @@ export function createAttributesFromPrimitive(
 		);
 		bufferInfo.numElements = accessors[primitive.indices].count;
 	} else {
-		bufferInfo.numElements = accessors[primitive.attributes['POSITION']].count;
+		bufferInfo.numElements = accessors[primitive.attributes["POSITION"]].count;
 	}
 
 	return bufferInfo;
@@ -348,7 +380,7 @@ export function materialToUniforms(
 				const texture = createTexture(gl, gl.TEXTURE_2D);
 
 				const gltfImage = root.images[gltfTexture.source];
-				if(gltfImage.uri) {
+				if (gltfImage.uri) {
 					const image = new Image();
 					image.onload = () => {
 						gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -368,7 +400,7 @@ export function materialToUniforms(
 						u_color: [1, 1, 1],
 						[`u_texture${baseColorTexture.texCoord || 0}`]: texture,
 					};
-				} else if(gltfImage.bufferView) {
+				} else if (gltfImage.bufferView) {
 					const bufferView = bufferViews[gltfImage.bufferView];
 
 					const nativeArray = new Uint8Array(
