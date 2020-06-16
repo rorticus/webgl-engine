@@ -7,6 +7,7 @@ import {
 	SceneRenderContext,
 } from "./interfaces";
 import { Engine } from "./Engine";
+import { AnimationStateMachine } from "./animation/AnimationStateMachine";
 
 export class GameObject {
 	id: string;
@@ -15,6 +16,7 @@ export class GameObject {
 	visible: boolean;
 	components: GameComponent[];
 	renderable?: Renderable;
+	animationStateMachine: AnimationStateMachine;
 
 	// transformation
 	up: vec3;
@@ -38,6 +40,8 @@ export class GameObject {
 		this.scale = vec3.fromValues(1, 1, 1);
 		this.localMatrix = mat4.create();
 		this.worldMatrix = mat4.create();
+
+		this.animationStateMachine = new AnimationStateMachine();
 	}
 
 	addComponent(component: GameComponent) {
@@ -183,6 +187,8 @@ export class GameObject {
 		this.components.forEach((component) => component(context, this));
 
 		this.children.forEach((child) => child.update(context));
+
+		this.animationStateMachine.update(context, this);
 	}
 
 	render(context: SceneRenderContext) {

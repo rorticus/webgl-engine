@@ -1,8 +1,8 @@
-import {Engine} from "../../../src/Engine";
-import {Scene} from "../../../src/Scene";
-import {vec3} from "gl-matrix";
-import {loadGLTF} from "../../../src/webgl/gltf";
-import {OrbitCamera} from "../../../src/cameras/OrbitCamera";
+import { Engine } from "../../../src/Engine";
+import { Scene } from "../../../src/Scene";
+import { vec3 } from "gl-matrix";
+import { loadGLTF } from "../../../src/webgl/gltf";
+import { OrbitCamera } from "../../../src/cameras/OrbitCamera";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -17,9 +17,10 @@ const texturedCube = loadGLTF(
 	engine.programs.standard,
 	require("./fox.json")
 );
+texturedCube.animationStateMachine.initialState = 'Survey';
 
 // const joint1 = texturedCube.getObjectById("b_Head_05", true);
-// joint1.rotate(0,  0, (-45 * Math.PI) / 180);
+// joint1.rotate((-45 * Math.PI) / 180,  0, 0);
 
 const orbitCamera = new OrbitCamera();
 
@@ -49,7 +50,7 @@ frame();
 
 orbitCamera.radius = 150;
 orbitCamera.elevation = 150;
-orbitCamera.azimuth = 45 * Math.PI / 180;
+orbitCamera.azimuth = (45 * Math.PI) / 180;
 
 const scene = new Scene();
 scene.camera = orbitCamera;

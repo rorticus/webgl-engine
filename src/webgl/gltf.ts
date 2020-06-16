@@ -16,6 +16,11 @@ import {
 import { mat4, quat, vec3 } from "gl-matrix";
 import { GameObject } from "../GameObject";
 import { Skin } from "./Skin";
+import { AnimationState } from "../animation/AnimationState";
+import { RotationAnimationChannel } from "../animation/RotationAnimationChannel";
+import { AnimationChannel } from "../animation/AnimationChannel";
+import { ScaleAnimationChannel } from "../animation/ScaleAnimationChannel";
+import { TranslationAnimationChannel } from "../animation/TranslationAnimationChannel";
 
 export interface GltfAnimationSampler {
 	/** The index of an accessor containing keyframe input values, e.g., time **/
@@ -39,7 +44,7 @@ export interface GltfAnimationChannel {
 		 * x, y, and z axes. For the "rotation" property, the values are a quaternion in the order (x, y, z, w), where
 		 * w is the scalar. For the "scale" property, the values are the scaling factors along the x, y, and z axes.
 		 */
-		path: 'rotation' | 'scale' | 'translation' | 'weights';
+		path: "rotation" | "scale" | "translation" | "weights";
 	};
 }
 
@@ -167,6 +172,7 @@ export interface GltfRoot {
 	images?: GltfImage[];
 	textures?: GltfTexture[];
 	skins?: GltfSkin[];
+	animations?: GltfAnimation[];
 }
 
 export function loadGLTF(
@@ -213,7 +219,12 @@ export function loadGLTF(
 
 	const scene = new GameObject();
 
-	const { scene: sceneIndex = 0, scenes = [], nodes = [] } = json;
+	const {
+		scene: sceneIndex = 0,
+		scenes = [],
+		nodes = [],
+		animations = [],
+	} = json;
 
 	const gltfNodes = nodes.map((node) => {
 		const n = new GameObject();
@@ -275,11 +286,6 @@ export function loadGLTF(
 
 	const skins = json.skins.map((skin) => {
 		const joints = skin.joints.map((index) => gltfNodes[index]);
-		// joints.forEach((joint) => {
-		// 	joint.rotation = quat.create();
-		// 	joint.position = vec3.create();
-		// 	joint.scale = vec3.fromValues(1, 1, 1);
-		// });
 		return new Skin(gl, joints, accessors[skin.inverseBindMatrices]);
 	});
 
@@ -298,6 +304,108 @@ export function loadGLTF(
 			scene.add(gltfNodes[node]);
 		});
 	}
+
+	// animations
+	let nameIndex = 1;
+
+	animations.map((animation) => {
+		const {
+			name = `animation${nameIndex++}`,
+			channels = [],
+			samplers = [],
+		} = animation;
+
+		const animationChannels: AnimationChannel[] = [];
+
+		channels.forEach((channel) => {
+			const { sampler: samplerIndex = 0, target } = channel;
+			const sampler = samplers[samplerIndex];
+			const targetNode = gltfNodes[target.node];
+			const targetPath = target.path;
+
+			const {
+				input: inputAccessorIndex,
+				interpolation = "LINEAR",
+				output: outputAccessorIndex,
+			} = sampler;
+
+			if (targetPath === "rotation") {
+				const keyframes = nativeArrayFromAccessor(
+					gl,
+					accessors[inputAccessorIndex]
+				) as Float32Array;
+				const output = nativeArrayFromAccessor(
+					gl,
+					accessors[outputAccessorIndex]
+				) as Float32Array;
+
+				animationChannels.push(
+					new RotationAnimationChannel(
+						targetNode,
+						Array.from(keyframes),
+						Array.from(keyframes).map((_, index) => {
+							return new Float32Array(
+								output.buffer,
+								Float32Array.BYTES_PER_ELEMENT * 4 * index,
+								4
+							) as quat;
+						})
+					)
+				);
+			} else if (targetPath === "scale") {
+				const keyframes = nativeArrayFromAccessor(
+					gl,
+					accessors[inputAccessorIndex]
+				) as Float32Array;
+				const output = nativeArrayFromAccessor(
+					gl,
+					accessors[outputAccessorIndex]
+				) as Float32Array;
+
+				animationChannels.push(
+					new ScaleAnimationChannel(
+						targetNode,
+						Array.from(keyframes),
+						Array.from(keyframes).map((_, index) => {
+							return new Float32Array(
+								output.buffer,
+								Float32Array.BYTES_PER_ELEMENT * 3 * index,
+								3
+							) as vec3;
+						})
+					)
+				);
+			} else if (targetPath === "translation") {
+				const keyframes = nativeArrayFromAccessor(
+					gl,
+					accessors[inputAccessorIndex]
+				) as Float32Array;
+				const output = nativeArrayFromAccessor(
+					gl,
+					accessors[outputAccessorIndex]
+				) as Float32Array;
+
+				animationChannels.push(
+					new TranslationAnimationChannel(
+						targetNode,
+						Array.from(keyframes),
+						Array.from(keyframes).map((_, index) => {
+							return new Float32Array(
+								output.buffer,
+								Float32Array.BYTES_PER_ELEMENT * 3 * index,
+								3
+							) as vec3;
+						})
+					)
+				);
+			}
+		});
+
+		const animationState = new AnimationState();
+		animationState.channels = animationChannels;
+
+		scene.animationStateMachine.registerState(name, animationState);
+	});
 
 	return scene;
 }
