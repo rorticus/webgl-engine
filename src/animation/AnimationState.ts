@@ -1,16 +1,16 @@
 import { GameComponentContext } from "../interfaces";
-import { GameObject } from "../GameObject";
-import { quat, vec3 } from "gl-matrix";
-import {AnimationChannel} from "./AnimationChannel";
+import { AnimationChannel } from "./AnimationChannel";
 
 export class AnimationState {
 	time: number = 0;
-	channels: AnimationChannel[];
+	channels: AnimationChannel[] = [];
 
-	update(context: GameComponentContext, gameObject: GameObject) {
+	update(context: GameComponentContext) {
 		this.time += context.deltaInSeconds;
-	}
 
-	getTransformationsForTime(time: number) {
+		this.channels.forEach((channel) => {
+			const value = channel.getValue(this.time);
+			channel.apply(value);
+		});
 	}
 }

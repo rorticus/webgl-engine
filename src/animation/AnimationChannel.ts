@@ -17,7 +17,7 @@ export abstract class AnimationChannel<T extends any = any> {
 				return [
 					this.values[i - 1],
 					this.values[i],
-					(time - this.values[i - 1]) / (this.values[i] - this.values[i - 1]),
+					(time - this.keyframes[i - 1]) / (this.keyframes[i] - this.keyframes[i - 1]),
 				];
 			}
 		}

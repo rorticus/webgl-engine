@@ -17,7 +17,7 @@ const texturedCube = loadGLTF(
 	engine.programs.standard,
 	require("./fox.json")
 );
-texturedCube.animationStateMachine.initialState = 'Survey';
+texturedCube.animationStateMachine.initialState = 'Run';
 
 // const joint1 = texturedCube.getObjectById("b_Head_05", true);
 // joint1.rotate((-45 * Math.PI) / 180,  0, 0);

@@ -56,7 +56,7 @@ export class AnimationStateMachine {
 						this.nextState = undefined;
 					}
 				} else {
-					currentState.update(context, gameObject);
+					currentState.update(context);
 
 					const transitions = this.stateTransitions[this.state];
 

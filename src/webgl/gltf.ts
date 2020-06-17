@@ -344,11 +344,7 @@ export function loadGLTF(
 						targetNode,
 						Array.from(keyframes),
 						Array.from(keyframes).map((_, index) => {
-							return new Float32Array(
-								output.buffer,
-								Float32Array.BYTES_PER_ELEMENT * 4 * index,
-								4
-							) as quat;
+							return output.subarray(4 * index, 4 * index + 4) as quat;
 						})
 					)
 				);
@@ -367,11 +363,7 @@ export function loadGLTF(
 						targetNode,
 						Array.from(keyframes),
 						Array.from(keyframes).map((_, index) => {
-							return new Float32Array(
-								output.buffer,
-								Float32Array.BYTES_PER_ELEMENT * 3 * index,
-								3
-							) as vec3;
+							return output.subarray(3 * index, 3 * index + 3) as vec3;
 						})
 					)
 				);
@@ -390,11 +382,7 @@ export function loadGLTF(
 						targetNode,
 						Array.from(keyframes),
 						Array.from(keyframes).map((_, index) => {
-							return new Float32Array(
-								output.buffer,
-								Float32Array.BYTES_PER_ELEMENT * 3 * index,
-								3
-							) as vec3;
+							return output.subarray(3 * index, 3 * index + 3) as vec3;
 						})
 					)
 				);
