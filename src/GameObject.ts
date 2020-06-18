@@ -16,7 +16,7 @@ export class GameObject {
 	visible: boolean;
 	components: GameComponent[];
 	renderable?: Renderable;
-	animationStateMachine: AnimationStateMachine;
+	animation: AnimationStateMachine;
 
 	// transformation
 	up: vec3;
@@ -41,7 +41,7 @@ export class GameObject {
 		this.localMatrix = mat4.create();
 		this.worldMatrix = mat4.create();
 
-		this.animationStateMachine = new AnimationStateMachine();
+		this.animation = new AnimationStateMachine();
 	}
 
 	addComponent(component: GameComponent) {
@@ -188,7 +188,7 @@ export class GameObject {
 
 		this.children.forEach((child) => child.update(context));
 
-		this.animationStateMachine.update(context, this);
+		this.animation.update(context, this);
 	}
 
 	render(context: SceneRenderContext) {

@@ -20,6 +20,10 @@ export class AnimationStateMachine {
 
 	constructor() {}
 
+	getState(name: string): AnimationState | undefined {
+		return this.states[name];
+	}
+
 	registerState(name: string, state: AnimationState) {
 		this.states[name] = state;
 	}

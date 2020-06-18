@@ -17,12 +17,17 @@ export abstract class AnimationChannel<T extends any = any> {
 				return [
 					this.values[i - 1],
 					this.values[i],
-					(time - this.keyframes[i - 1]) / (this.keyframes[i] - this.keyframes[i - 1]),
+					(time - this.keyframes[i - 1]) /
+						(this.keyframes[i] - this.keyframes[i - 1]),
 				];
 			}
 		}
 
 		return [this.values[0], this.values[1], 0];
+	}
+
+	getDuration() {
+		return this.keyframes[this.keyframes.length - 1];
 	}
 
 	abstract getValue(time: number): T;

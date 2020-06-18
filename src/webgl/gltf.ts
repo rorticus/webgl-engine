@@ -7,20 +7,15 @@ import {
 	GlBufferView,
 	ProgramInfo,
 } from "./interfaces";
-import {
-	createBufferFromTypedArray,
-	createTexture,
-	nativeArrayFromAccessor,
-	numberOfComponentsForType,
-} from "./utils";
-import { mat4, quat, vec3 } from "gl-matrix";
-import { GameObject } from "../GameObject";
-import { Skin } from "./Skin";
-import { AnimationState } from "../animation/AnimationState";
-import { RotationAnimationChannel } from "../animation/RotationAnimationChannel";
-import { AnimationChannel } from "../animation/AnimationChannel";
-import { ScaleAnimationChannel } from "../animation/ScaleAnimationChannel";
-import { TranslationAnimationChannel } from "../animation/TranslationAnimationChannel";
+import {createBufferFromTypedArray, createTexture, nativeArrayFromAccessor, numberOfComponentsForType,} from "./utils";
+import {mat4, quat, vec3} from "gl-matrix";
+import {GameObject} from "../GameObject";
+import {Skin} from "./Skin";
+import {AnimationState, AnimationWrapMode} from "../animation/AnimationState";
+import {RotationAnimationChannel} from "../animation/RotationAnimationChannel";
+import {AnimationChannel} from "../animation/AnimationChannel";
+import {ScaleAnimationChannel} from "../animation/ScaleAnimationChannel";
+import {TranslationAnimationChannel} from "../animation/TranslationAnimationChannel";
 
 export interface GltfAnimationSampler {
 	/** The index of an accessor containing keyframe input values, e.g., time **/
@@ -390,9 +385,10 @@ export function loadGLTF(
 		});
 
 		const animationState = new AnimationState();
+		animationState.wrapMode = AnimationWrapMode.Loop;
 		animationState.channels = animationChannels;
 
-		scene.animationStateMachine.registerState(name, animationState);
+		scene.animation.registerState(name, animationState);
 	});
 
 	return scene;
