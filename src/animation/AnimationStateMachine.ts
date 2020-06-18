@@ -5,7 +5,12 @@ import { GameObject } from "../GameObject";
 export interface AnimationStateTransition {
 	to: string;
 	duration: number;
-	condition(context: GameComponentContext, gameObject: GameObject): boolean;
+	condition(
+		context: GameComponentContext,
+		gameObject: GameObject,
+		playDuration: number,
+		totalDuration: number
+	): boolean;
 }
 
 export class AnimationStateMachine {
@@ -57,6 +62,7 @@ export class AnimationStateMachine {
 
 					if (this.transitionTime > this.transitionDuration) {
 						this.state = this.nextState;
+						this.states[this.state].reset();
 						this.nextState = undefined;
 					}
 				} else {
@@ -66,7 +72,14 @@ export class AnimationStateMachine {
 
 					if (transitions) {
 						for (let i = 0; i < transitions.length; i++) {
-							if (transitions[i].condition(context, gameObject)) {
+							if (
+								transitions[i].condition(
+									context,
+									gameObject,
+									currentState.time,
+									currentState.duration
+								)
+							) {
 								this.transitionTo(transitions[i].to, transitions[i].duration);
 								break;
 							}
@@ -76,6 +89,7 @@ export class AnimationStateMachine {
 			}
 		} else if (this.nextState) {
 			this.state = this.nextState;
+			this.states[this.state].reset();
 		} else {
 			this.initialState && this.transitionTo(this.initialState, 0);
 		}
