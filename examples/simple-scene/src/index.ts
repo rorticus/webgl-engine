@@ -66,15 +66,11 @@ scene.loadSkymap(engine.gl, engine.programs.skybox, {
 
 texturedCube.animation.addTransition('Survey', 'Run', (context, gameObject, duration) => {
 	return duration > 5;
-});
+}, 5);
 
-texturedCube.animation.addTransition('Run', 'Walk', (context, gameObject, duration) => {
+texturedCube.animation.addTransition('Run', 'Survey', (context, gameObject, duration) => {
 	return duration > 5;
-});
-
-texturedCube.animation.addTransition('Walk', 'Survey', (context, gameObject, duration) => {
-	return duration > 5;
-});
+}, 5);
 
 scene.addGameObject(texturedCube);
 

@@ -31,5 +31,5 @@ export abstract class AnimationChannel<T extends any = any> {
 	}
 
 	abstract getValue(time: number): T;
-	abstract apply(value: T): void;
+	abstract apply(value: T, weight: number): void;
 }

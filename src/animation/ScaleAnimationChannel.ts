@@ -12,7 +12,12 @@ export class ScaleAnimationChannel extends AnimationChannel<vec3> {
         return result;
     }
 
-    apply(value: vec3) {
-        this.gameObject.scale = value;
+    apply(value: vec3, weight = 1) {
+        vec3.lerp(
+            this.gameObject.scale,
+            this.gameObject.scale,
+            value,
+            weight
+        );
     }
 }

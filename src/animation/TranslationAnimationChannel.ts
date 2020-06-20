@@ -1,5 +1,5 @@
-import {AnimationChannel} from "./AnimationChannel";
-import {vec3} from "gl-matrix";
+import { AnimationChannel } from "./AnimationChannel";
+import { vec3 } from "gl-matrix";
 
 export class TranslationAnimationChannel extends AnimationChannel<vec3> {
 	getValue(time: number): vec3 {
@@ -12,7 +12,12 @@ export class TranslationAnimationChannel extends AnimationChannel<vec3> {
 		return result;
 	}
 
-	apply(value: vec3) {
-		this.gameObject.position = value;
+	apply(value: vec3, weight = 1) {
+		vec3.lerp(
+			this.gameObject.position,
+			this.gameObject.position,
+			value,
+			weight
+		);
 	}
 }

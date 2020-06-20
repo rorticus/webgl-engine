@@ -57,13 +57,16 @@ export class AnimationStateMachine {
 			if (currentState) {
 				if (this.nextState !== undefined) {
 					this.transitionTime += context.deltaInSeconds;
-					// transitioning to the next state
-					// blend the last animation state with the beginning of the new animation state
-
 					if (this.transitionTime > this.transitionDuration) {
 						this.state = this.nextState;
 						this.states[this.state].reset();
 						this.nextState = undefined;
+					} else {
+						const t = this.transitionTime / this.transitionDuration;
+
+						currentState.update(context);
+
+						this.states[this.nextState].update(context, t);
 					}
 				} else {
 					currentState.update(context);
@@ -97,6 +100,7 @@ export class AnimationStateMachine {
 
 	transitionTo(state: string, duration: number) {
 		this.nextState = state;
+		this.states[state].reset();
 		this.transitionDuration = duration;
 		this.transitionTime = 0;
 	}

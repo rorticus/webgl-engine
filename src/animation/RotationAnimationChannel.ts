@@ -12,7 +12,12 @@ export class RotationAnimationChannel extends AnimationChannel<quat> {
 		return result;
 	}
 
-	apply(value: quat) {
-		this.gameObject.rotation = value;
+	apply(value: quat, weight = 1) {
+		quat.lerp(
+			this.gameObject.rotation,
+			this.gameObject.rotation,
+			value,
+			weight
+		);
 	}
 }

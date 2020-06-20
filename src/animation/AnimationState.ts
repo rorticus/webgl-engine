@@ -17,7 +17,7 @@ export class AnimationState {
 		this.time = 0;
 	}
 
-	update(context: GameComponentContext) {
+	update(context: GameComponentContext, weight = 1) {
 		this.time += context.deltaInSeconds;
 
 		if (this.duration === 0) {
@@ -48,7 +48,7 @@ export class AnimationState {
 
 		this.channels.forEach((channel) => {
 			const value = channel.getValue(adjustedTime);
-			channel.apply(value);
+			channel.apply(value, weight);
 		});
 	}
 }
