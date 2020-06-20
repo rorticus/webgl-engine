@@ -13,7 +13,7 @@ export class RotationAnimationChannel extends AnimationChannel<quat> {
 	}
 
 	apply(value: quat, weight = 1) {
-		quat.lerp(
+		quat.slerp(
 			this.gameObject.rotation,
 			this.gameObject.rotation,
 			value,

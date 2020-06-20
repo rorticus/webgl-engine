@@ -59,10 +59,9 @@ export class AnimationStateMachine {
 					this.transitionTime += context.deltaInSeconds;
 					if (this.transitionTime > this.transitionDuration) {
 						this.state = this.nextState;
-						this.states[this.state].reset();
 						this.nextState = undefined;
 					} else {
-						const t = this.transitionTime / this.transitionDuration;
+						const t = Math.min(this.transitionTime / this.transitionDuration, 1);
 
 						currentState.update(context);
 
