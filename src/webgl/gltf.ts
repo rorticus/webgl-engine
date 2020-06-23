@@ -7,15 +7,20 @@ import {
 	GlBufferView,
 	ProgramInfo,
 } from "./interfaces";
-import {createBufferFromTypedArray, createTexture, nativeArrayFromAccessor, numberOfComponentsForType,} from "./utils";
-import {mat4, quat, vec3} from "gl-matrix";
-import {GameObject} from "../GameObject";
-import {Skin} from "./Skin";
-import {AnimationState, AnimationWrapMode} from "../animation/AnimationState";
-import {RotationAnimationChannel} from "../animation/RotationAnimationChannel";
-import {AnimationChannel} from "../animation/AnimationChannel";
-import {ScaleAnimationChannel} from "../animation/ScaleAnimationChannel";
-import {TranslationAnimationChannel} from "../animation/TranslationAnimationChannel";
+import {
+	createBufferFromTypedArray,
+	createTexture,
+	nativeArrayFromAccessor,
+	numberOfComponentsForType,
+} from "./utils";
+import { mat4, quat, vec3 } from "gl-matrix";
+import { GameObject } from "../GameObject";
+import { Skin } from "./Skin";
+import { AnimationState, AnimationWrapMode } from "../animation/AnimationState";
+import { RotationAnimationChannel } from "../animation/RotationAnimationChannel";
+import { AnimationChannel } from "../animation/AnimationChannel";
+import { ScaleAnimationChannel } from "../animation/ScaleAnimationChannel";
+import { TranslationAnimationChannel } from "../animation/TranslationAnimationChannel";
 
 export interface GltfAnimationSampler {
 	/** The index of an accessor containing keyframe input values, e.g., time **/
@@ -173,21 +178,30 @@ export interface GltfRoot {
 export function loadGLTF(
 	gl: WebGLRenderingContext,
 	programInfo: ProgramInfo,
-	json: GltfRoot
+	json: GltfRoot,
+	binaryBuffers?: Uint8Array[]
 ) {
-	const buffers = json.buffers.map((buffer) => {
-		const arrayBuffer = new Uint8Array(buffer.byteLength);
+	const buffers = json.buffers.map((buffer, index) => {
+		if (buffer.uri) {
+			const arrayBuffer = new Uint8Array(buffer.byteLength);
 
-		const str = atob(buffer.uri.split(",")[1]);
+			const str = atob(buffer.uri.split(",")[1]);
 
-		for (let i = 0; i < buffer.byteLength; i++) {
-			arrayBuffer[i] = str.charCodeAt(i);
+			for (let i = 0; i < buffer.byteLength; i++) {
+				arrayBuffer[i] = str.charCodeAt(i);
+			}
+
+			return {
+				byteLength: buffer.byteLength,
+				arrayBuffer: arrayBuffer.buffer,
+			} as GlBuffer;
+		} else {
+			const arrayBuffer = binaryBuffers[index];
+			return {
+				byteLength: arrayBuffer.byteLength,
+				arrayBuffer: arrayBuffer.buffer,
+			};
 		}
-
-		return {
-			byteLength: buffer.byteLength,
-			arrayBuffer: arrayBuffer.buffer,
-		} as GlBuffer;
 	});
 
 	const bufferViews = json.bufferViews.map(
@@ -201,16 +215,20 @@ export function loadGLTF(
 			} as GlBufferView)
 	);
 
-	const accessors = json.accessors.map(
-		(accessor) =>
-			({
-				bufferView: bufferViews[accessor.bufferView],
-				byteOffset: accessor.byteOffset || 0,
-				componentType: accessor.componentType,
-				count: accessor.count,
-				type: accessor.type,
-			} as GlAccessor)
-	);
+	const accessors = json.accessors.map((accessor) => {
+		const glAccessor = {
+			bufferView: bufferViews[accessor.bufferView],
+			byteOffset: accessor.byteOffset || 0,
+			componentType: accessor.componentType,
+			count: accessor.count,
+			type: accessor.type,
+		} as GlAccessor;
+
+		return {
+			...glAccessor,
+			nativeArray: nativeArrayFromAccessor(gl, glAccessor),
+		};
+	});
 
 	const scene = new GameObject();
 
@@ -279,7 +297,7 @@ export function loadGLTF(
 		}
 	});
 
-	const skins = json.skins.map((skin) => {
+	const skins = (json.skins || []).map((skin) => {
 		const joints = skin.joints.map((index) => gltfNodes[index]);
 		return new Skin(gl, joints, accessors[skin.inverseBindMatrices]);
 	});
@@ -325,14 +343,10 @@ export function loadGLTF(
 			} = sampler;
 
 			if (targetPath === "rotation") {
-				const keyframes = nativeArrayFromAccessor(
-					gl,
-					accessors[inputAccessorIndex]
-				) as Float32Array;
-				const output = nativeArrayFromAccessor(
-					gl,
-					accessors[outputAccessorIndex]
-				) as Float32Array;
+				const keyframes = accessors[inputAccessorIndex]
+					.nativeArray as Float32Array;
+				const output = accessors[outputAccessorIndex]
+					.nativeArray as Float32Array;
 
 				animationChannels.push(
 					new RotationAnimationChannel(
@@ -344,14 +358,10 @@ export function loadGLTF(
 					)
 				);
 			} else if (targetPath === "scale") {
-				const keyframes = nativeArrayFromAccessor(
-					gl,
-					accessors[inputAccessorIndex]
-				) as Float32Array;
-				const output = nativeArrayFromAccessor(
-					gl,
-					accessors[outputAccessorIndex]
-				) as Float32Array;
+				const keyframes = accessors[inputAccessorIndex]
+					.nativeArray as Float32Array;
+				const output = accessors[outputAccessorIndex]
+					.nativeArray as Float32Array;
 
 				animationChannels.push(
 					new ScaleAnimationChannel(
@@ -363,14 +373,10 @@ export function loadGLTF(
 					)
 				);
 			} else if (targetPath === "translation") {
-				const keyframes = nativeArrayFromAccessor(
-					gl,
-					accessors[inputAccessorIndex]
-				) as Float32Array;
-				const output = nativeArrayFromAccessor(
-					gl,
-					accessors[outputAccessorIndex]
-				) as Float32Array;
+				const keyframes = accessors[inputAccessorIndex]
+					.nativeArray as Float32Array;
+				const output = accessors[outputAccessorIndex]
+					.nativeArray as Float32Array;
 
 				animationChannels.push(
 					new TranslationAnimationChannel(
@@ -408,7 +414,7 @@ export function createAttributesFromPrimitive(
 				[`a_${name.toLowerCase()}`]: {
 					buffer: createBufferFromTypedArray(
 						gl,
-						nativeArrayFromAccessor(gl, accessor),
+						accessor.nativeArray,
 						accessor.bufferView.target
 					),
 					numItems: accessor.count,
@@ -427,9 +433,10 @@ export function createAttributesFromPrimitive(
 	if (indices !== undefined) {
 		bufferInfo.indices = createBufferFromTypedArray(
 			gl,
-			nativeArrayFromAccessor(gl, accessors[primitive.indices]),
+			accessors[primitive.indices].nativeArray,
 			gl.ELEMENT_ARRAY_BUFFER
 		);
+
 		bufferInfo.numElements = accessors[primitive.indices].count;
 	} else {
 		bufferInfo.numElements = accessors[primitive.attributes["POSITION"]].count;
@@ -534,4 +541,57 @@ export function materialToUniforms(
 	return {
 		u_color: [1, 1, 1, 1],
 	};
+}
+
+export function loadGLB(
+	gl: WebGLRenderingContext,
+	programInfo: ProgramInfo,
+	data: ArrayBuffer
+) {
+	const dataView = new DataView(data);
+
+	// header
+	const magic = dataView.getUint32(0, true);
+	const version = dataView.getUint32(4, true);
+	const length = dataView.getUint32(8, true);
+
+	if (version !== 2) {
+		throw new Error("Invalid GLB file, only version 2 is supported");
+	}
+
+	const chunks = [];
+	let offset = 12;
+	while (offset < length) {
+		const chunkLength = dataView.getUint32(offset, true);
+		const chunkType = dataView.getUint32(offset + 4, true);
+		const chunkData = new Uint8Array(
+			data.slice(offset + 8, offset + 8 + chunkLength)
+		);
+
+		chunks.push({
+			type: chunkType,
+			data: chunkData,
+		});
+
+		offset += chunkLength + 8;
+	}
+
+	// 0x4e4f534a is ASCII for "JSON"
+	const jsonChunk = chunks.find((chunk) => chunk.type === 0x4e4f534a);
+
+	// 0x004E4942 is ASCII for "BIN"
+	const binaryChunks = chunks.filter((chunk) => chunk.type === 0x004e4942);
+
+	if (jsonChunk) {
+		const json = new TextDecoder().decode(jsonChunk.data);
+
+		return loadGLTF(
+			gl,
+			programInfo,
+			JSON.parse(json),
+			binaryChunks.map((chunk) => chunk.data)
+		);
+	}
+
+	throw new Error("Invalid GLB file, no JSON chunk found");
 }

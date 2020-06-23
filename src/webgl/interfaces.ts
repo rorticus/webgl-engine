@@ -108,6 +108,8 @@ export interface GlAccessor {
 	count: number;
 	/** Element type like SCALAR or VEC2 **/
 	type: GlAccessorType;
+	/** Native array **/
+	nativeArray: NativeArray;
 }
 
 export interface PrimitiveData {

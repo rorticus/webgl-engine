@@ -19,6 +19,10 @@ module.exports = {
             {
                 test: /\.(png|jpg)$/,
                 use: 'file-loader'
+            },
+            {
+                test: /\.glb$/,
+                use: 'arraybuffer-loader'
             }
         ]
     },

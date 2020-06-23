@@ -78,17 +78,13 @@ vec3 calculateAmbientColor(void) {
 }
 
 vec3 calculatePositionalLights(vec3 normal) {
-	vec3 diffuse = vec3(0.0, 0.0, 0.0);
+	vec3 diffuse = u_color;
 	
 	for(int i = 0; i < NUM_POSITIONAL_LIGHTS; i++) {
 		vec3 lightDirection = normalize(v_surfaceToLight[i]);
 		float light = max(dot(normal, -lightDirection), 0.0);
 		
-		if(light > 0.0) {
 		    diffuse += u_lightWorldColor[i] * texture2D(u_texture0, v_texcoord0).xyz * light;				
-		} else {
-		    diffuse += u_lightWorldColor[i] * texture2D(u_texture0, v_texcoord0).xyz;
-		}
 	}
 	
 	return diffuse;

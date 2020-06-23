@@ -1,9 +1,9 @@
-import {Engine} from "../../../src/Engine";
-import {Scene} from "../../../src/Scene";
-import {vec3} from "gl-matrix";
-import {loadGLTF} from "../../../src/webgl/gltf";
-import {OrbitCamera} from "../../../src/cameras/OrbitCamera";
-import {AnimationWrapMode} from "../../../src/animation/AnimationState";
+import { Engine } from "../../../src/Engine";
+import { Scene } from "../../../src/Scene";
+import { vec3 } from "gl-matrix";
+import { loadGLB, loadGLTF } from "../../../src/webgl/gltf";
+import { OrbitCamera } from "../../../src/cameras/OrbitCamera";
+import { AnimationWrapMode } from "../../../src/animation/AnimationState";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -13,12 +13,11 @@ document.body.appendChild(canvas);
 
 const engine = new Engine(canvas);
 
-const texturedCube = loadGLTF(
+const mushroom = loadGLB(
 	engine.gl,
 	engine.programs.standard,
-	require("./fox.json")
+	require("./mushroom_red.glb")
 );
-texturedCube.animation.initialState = 'Survey';
 
 const orbitCamera = new OrbitCamera();
 
@@ -46,8 +45,8 @@ function frame() {
 }
 frame();
 
-orbitCamera.radius = 150;
-orbitCamera.elevation = 150;
+orbitCamera.radius = 2;
+orbitCamera.elevation = 1;
 orbitCamera.azimuth = (45 * Math.PI) / 180;
 
 const scene = new Scene();
@@ -64,19 +63,9 @@ scene.loadSkymap(engine.gl, engine.programs.skybox, {
 	positiveZ: require("./skybox6.jpg").default,
 });
 
-texturedCube.animation.addTransition('Survey', 'Run', (context, gameObject, duration) => {
-	return duration > 5;
-}, 1);
+console.log(mushroom);
 
-texturedCube.animation.addTransition('Run', 'Walk', (context, gameObject, duration) => {
-	return duration > 5;
-}, 1);
-
-texturedCube.animation.addTransition('Walk', 'Survey', (context, gameObject, duration) => {
-	return duration > 5;
-}, 1);
-
-scene.addGameObject(texturedCube);
+scene.addGameObject(mushroom);
 
 engine.scene = scene;
 engine.start();
