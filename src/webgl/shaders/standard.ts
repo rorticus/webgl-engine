@@ -84,7 +84,7 @@ vec3 calculatePositionalLights(vec3 normal) {
 		vec3 lightDirection = normalize(v_surfaceToLight[i]);
 		float light = max(dot(normal, -lightDirection), 0.0);
 		
-		    diffuse += u_lightWorldColor[i] * texture2D(u_texture0, v_texcoord0).xyz * light;				
+		    // diffuse += u_lightWorldColor[i] * texture2D(u_texture0, v_texcoord0).xyz * light;				
 	}
 	
 	return diffuse;
