@@ -233,7 +233,7 @@ export class GameObject {
 					gl.drawElements(
 						gl.TRIANGLES,
 						renderable.attributes.numElements,
-						gl.UNSIGNED_SHORT,
+					  renderable.attributes.elementType || gl.UNSIGNED_SHORT,
 						0
 					);
 				} else {

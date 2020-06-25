@@ -438,6 +438,7 @@ export function createAttributesFromPrimitive(
 		);
 
 		bufferInfo.numElements = accessors[primitive.indices].count;
+		bufferInfo.elementType = accessors[primitive.indices].componentType || gl.UNSIGNED_SHORT;
 	} else {
 		bufferInfo.numElements = accessors[primitive.attributes["POSITION"]].count;
 	}

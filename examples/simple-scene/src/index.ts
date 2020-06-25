@@ -16,7 +16,7 @@ const engine = new Engine(canvas);
 const mushroom = loadGLB(
 	engine.gl,
 	engine.programs.standard,
-	require("./mushroom_red.glb")
+	require("./bomb.glb")
 );
 
 const orbitCamera = new OrbitCamera();

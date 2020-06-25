@@ -71,6 +71,7 @@ export class Engine {
 
 		// getting this extension has the side effect of allowing gl.FLOAT texture types (which we need for skinning)
 		gl.getExtension("OES_texture_float");
+	  	gl.getExtension('OES_element_index_uint');
 
 		this.programs = {
 			standard: createProgram(gl, standardVertexShader, standardFragmentShader),
