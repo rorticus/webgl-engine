@@ -2,12 +2,15 @@
   "name": "webgl-engine",
   "version": "1.0.0",
   "description": "WebGL game engine for creating TypeScript games",
-  "main": "index.js",
+  "main": "lib/Engine.js",
+  "types": "lib/Engine.d.ts",
   "directories": {
     "example": "examples"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
