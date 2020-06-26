@@ -16,7 +16,7 @@ const engine = new Engine(canvas);
 const mushroom = loadGLB(
 	engine.gl,
 	engine.programs.standard,
-	require("./bomb.glb")
+	require("./map.glb")
 );
 
 const orbitCamera = new OrbitCamera();
@@ -45,13 +45,13 @@ function frame() {
 }
 frame();
 
-orbitCamera.radius = 2;
-orbitCamera.elevation = 1;
+orbitCamera.radius = 5;
+orbitCamera.elevation = 5;
 orbitCamera.azimuth = (45 * Math.PI) / 180;
 
 const scene = new Scene();
 scene.camera = orbitCamera;
-scene.pointLights[0].position = vec3.fromValues(0, 5, 150);
+scene.pointLights[0].position = vec3.fromValues(0, 5, 5);
 scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
 
 scene.loadSkymap(engine.gl, engine.programs.skybox, {

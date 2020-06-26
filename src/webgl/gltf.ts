@@ -499,6 +499,7 @@ export function materialToUniforms(
 					return {
 						u_color: [1, 1, 1],
 						[`u_texture${baseColorTexture.texCoord || 0}`]: texture,
+					  	u_hasTexture: true
 					};
 				} else if (gltfImage.bufferView) {
 					const bufferView = bufferViews[gltfImage.bufferView];
@@ -529,6 +530,7 @@ export function materialToUniforms(
 					return {
 						u_color: [1, 1, 1],
 						[`u_texture${baseColorTexture.texCoord}`]: texture,
+					  	u_hasTexture: true
 					};
 				}
 			}
@@ -536,11 +538,13 @@ export function materialToUniforms(
 
 		return {
 			u_color: [baseColorFactor[0], baseColorFactor[1], baseColorFactor[2]],
+		  	u_hasTexture: false
 		};
 	}
 
 	return {
 		u_color: [1, 1, 1, 1],
+	  	u_hasTexture: false
 	};
 }
 
