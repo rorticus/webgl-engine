@@ -196,11 +196,19 @@ export function loadGLTF(
 				arrayBuffer: arrayBuffer.buffer,
 			} as GlBuffer;
 		} else {
-			const arrayBuffer = binaryBuffers[index];
-			return {
-				byteLength: arrayBuffer.byteLength,
-				arrayBuffer: arrayBuffer.buffer,
-			};
+			const arrayBuffer = binaryBuffers && binaryBuffers[index];
+
+			if (arrayBuffer) {
+				return {
+					byteLength: arrayBuffer.byteLength,
+					arrayBuffer: arrayBuffer.buffer,
+				};
+			} else {
+				return {
+					byteLength: 0,
+					arrayBuffer: new ArrayBuffer(0),
+				};
+			}
 		}
 	});
 
@@ -241,7 +249,7 @@ export function loadGLTF(
 
 	const gltfNodes = nodes.map((node) => {
 		const n = new GameObject();
-		n.id = node.name;
+		n.id = node.name || "";
 
 		if (node.rotation) {
 			n.rotation = quat.fromValues(...node.rotation);
@@ -271,7 +279,7 @@ export function loadGLTF(
 					renderables: mesh.primitives.map((primitive) => ({
 						attributes: createAttributesFromPrimitive(gl, accessors, primitive),
 						uniforms:
-							primitive.material !== undefined
+							primitive.material !== undefined && json.materials
 								? materialToUniforms(
 										gl,
 										json,
@@ -299,12 +307,13 @@ export function loadGLTF(
 
 	const skins = (json.skins || []).map((skin) => {
 		const joints = skin.joints.map((index) => gltfNodes[index]);
-		return new Skin(gl, joints, accessors[skin.inverseBindMatrices]);
+		return new Skin(gl, joints, accessors[skin.inverseBindMatrices || 0]);
 	});
 
 	nodes.forEach((node, index) => {
 		if (node.skin !== undefined && gltfNodes[index].renderable) {
-			gltfNodes[index].renderable.skin = skins[node.skin];
+			// @ts-ignore
+		  gltfNodes[index].renderable.skin = skins[node.skin];
 		}
 	});
 
@@ -332,61 +341,63 @@ export function loadGLTF(
 
 		channels.forEach((channel) => {
 			const { sampler: samplerIndex = 0, target } = channel;
-			const sampler = samplers[samplerIndex];
-			const targetNode = gltfNodes[target.node];
-			const targetPath = target.path;
+			if (target.node) {
+				const sampler = samplers[samplerIndex];
+				const targetNode = gltfNodes[target.node];
+				const targetPath = target.path;
 
-			const {
-				input: inputAccessorIndex,
-				interpolation = "LINEAR",
-				output: outputAccessorIndex,
-			} = sampler;
+				const {
+					input: inputAccessorIndex,
+					interpolation = "LINEAR",
+					output: outputAccessorIndex,
+				} = sampler;
 
-			if (targetPath === "rotation") {
-				const keyframes = accessors[inputAccessorIndex]
-					.nativeArray as Float32Array;
-				const output = accessors[outputAccessorIndex]
-					.nativeArray as Float32Array;
+				if (targetPath === "rotation") {
+					const keyframes = accessors[inputAccessorIndex]
+						.nativeArray as Float32Array;
+					const output = accessors[outputAccessorIndex]
+						.nativeArray as Float32Array;
 
-				animationChannels.push(
-					new RotationAnimationChannel(
-						targetNode,
-						Array.from(keyframes),
-						Array.from(keyframes).map((_, index) => {
-							return output.subarray(4 * index, 4 * index + 4) as quat;
-						})
-					)
-				);
-			} else if (targetPath === "scale") {
-				const keyframes = accessors[inputAccessorIndex]
-					.nativeArray as Float32Array;
-				const output = accessors[outputAccessorIndex]
-					.nativeArray as Float32Array;
+					animationChannels.push(
+						new RotationAnimationChannel(
+							targetNode,
+							Array.from(keyframes),
+							Array.from(keyframes).map((_, index) => {
+								return output.subarray(4 * index, 4 * index + 4) as quat;
+							})
+						)
+					);
+				} else if (targetPath === "scale") {
+					const keyframes = accessors[inputAccessorIndex]
+						.nativeArray as Float32Array;
+					const output = accessors[outputAccessorIndex]
+						.nativeArray as Float32Array;
 
-				animationChannels.push(
-					new ScaleAnimationChannel(
-						targetNode,
-						Array.from(keyframes),
-						Array.from(keyframes).map((_, index) => {
-							return output.subarray(3 * index, 3 * index + 3) as vec3;
-						})
-					)
-				);
-			} else if (targetPath === "translation") {
-				const keyframes = accessors[inputAccessorIndex]
-					.nativeArray as Float32Array;
-				const output = accessors[outputAccessorIndex]
-					.nativeArray as Float32Array;
+					animationChannels.push(
+						new ScaleAnimationChannel(
+							targetNode,
+							Array.from(keyframes),
+							Array.from(keyframes).map((_, index) => {
+								return output.subarray(3 * index, 3 * index + 3) as vec3;
+							})
+						)
+					);
+				} else if (targetPath === "translation") {
+					const keyframes = accessors[inputAccessorIndex]
+						.nativeArray as Float32Array;
+					const output = accessors[outputAccessorIndex]
+						.nativeArray as Float32Array;
 
-				animationChannels.push(
-					new TranslationAnimationChannel(
-						targetNode,
-						Array.from(keyframes),
-						Array.from(keyframes).map((_, index) => {
-							return output.subarray(3 * index, 3 * index + 3) as vec3;
-						})
-					)
-				);
+					animationChannels.push(
+						new TranslationAnimationChannel(
+							targetNode,
+							Array.from(keyframes),
+							Array.from(keyframes).map((_, index) => {
+								return output.subarray(3 * index, 3 * index + 3) as vec3;
+							})
+						)
+					);
+				}
 			}
 		});
 
@@ -429,8 +440,7 @@ export function createAttributesFromPrimitive(
 		}, {}),
 	};
 
-	let indices = primitive.indices;
-	if (indices !== undefined) {
+	if (primitive.indices !== undefined) {
 		bufferInfo.indices = createBufferFromTypedArray(
 			gl,
 			accessors[primitive.indices].nativeArray,
@@ -438,7 +448,8 @@ export function createAttributesFromPrimitive(
 		);
 
 		bufferInfo.numElements = accessors[primitive.indices].count;
-		bufferInfo.elementType = accessors[primitive.indices].componentType || gl.UNSIGNED_SHORT;
+		bufferInfo.elementType =
+			accessors[primitive.indices].componentType || gl.UNSIGNED_SHORT;
 	} else {
 		bufferInfo.numElements = accessors[primitive.attributes["POSITION"]].count;
 	}
@@ -447,14 +458,14 @@ export function createAttributesFromPrimitive(
 }
 
 function Uint8ToBase64(u8Arr: Uint8Array) {
-	var CHUNK_SIZE = 0x8000; //arbitrary number
-	var index = 0;
-	var length = u8Arr.length;
-	var result = "";
-	var slice;
+	let CHUNK_SIZE = 0x8000; //arbitrary number
+	let index = 0;
+	let length = u8Arr.length;
+	let result = "";
+	let slice;
 	while (index < length) {
 		slice = u8Arr.subarray(index, Math.min(index + CHUNK_SIZE, length));
-		result += String.fromCharCode.apply(null, slice);
+		result += String.fromCharCode.apply(null, slice as any);
 		index += CHUNK_SIZE;
 	}
 	return btoa(result);
@@ -474,9 +485,9 @@ export function materialToUniforms(
 			baseColorTexture,
 		} = pbrMetallicRoughness;
 
-		if (baseColorTexture) {
+		if (baseColorTexture && root.textures) {
 			const gltfTexture = root.textures[baseColorTexture.index];
-			if (gltfTexture) {
+			if (gltfTexture && root.images) {
 				const texture = createTexture(gl, gl.TEXTURE_2D);
 
 				const gltfImage = root.images[gltfTexture.source];
@@ -499,7 +510,7 @@ export function materialToUniforms(
 					return {
 						u_color: [1, 1, 1],
 						[`u_texture${baseColorTexture.texCoord || 0}`]: texture,
-					  	u_hasTexture: true
+						u_hasTexture: true,
 					};
 				} else if (gltfImage.bufferView) {
 					const bufferView = bufferViews[gltfImage.bufferView];
@@ -530,7 +541,7 @@ export function materialToUniforms(
 					return {
 						u_color: [1, 1, 1],
 						[`u_texture${baseColorTexture.texCoord}`]: texture,
-					  	u_hasTexture: true
+						u_hasTexture: true,
 					};
 				}
 			}
@@ -538,13 +549,13 @@ export function materialToUniforms(
 
 		return {
 			u_color: [baseColorFactor[0], baseColorFactor[1], baseColorFactor[2]],
-		  	u_hasTexture: false
+			u_hasTexture: false,
 		};
 	}
 
 	return {
 		u_color: [1, 1, 1, 1],
-	  	u_hasTexture: false
+		u_hasTexture: false,
 	};
 }
 

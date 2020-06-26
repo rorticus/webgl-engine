@@ -10,7 +10,7 @@ export enum AnimationWrapMode {
 export class AnimationState {
 	time: number = 0;
 	channels: AnimationChannel[] = [];
-	wrapMode: AnimationWrapMode;
+	wrapMode: AnimationWrapMode = AnimationWrapMode.None;
 	duration: number = 0;
 
 	reset() {

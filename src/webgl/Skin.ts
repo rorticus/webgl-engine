@@ -37,7 +37,12 @@ export class Skin {
 			);
 		}
 
-		this.jointTexture = gl.createTexture();
+		const texture = gl.createTexture();
+		if (!texture) {
+			throw new Error("Failed to create joint texture");
+		}
+
+		this.jointTexture = texture;
 		gl.bindTexture(gl.TEXTURE_2D, this.jointTexture);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);

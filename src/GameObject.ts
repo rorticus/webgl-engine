@@ -10,7 +10,7 @@ import { Engine } from "./Engine";
 import { AnimationStateMachine } from "./animation/AnimationStateMachine";
 
 export class GameObject {
-	id: string;
+	id: string = "";
 	parent: GameObject | null;
 	children: GameObject[];
 	visible: boolean;
@@ -125,7 +125,7 @@ export class GameObject {
 		const index = this.children.indexOf(object);
 
 		if (index !== -1) {
-			object.parent = undefined;
+			object.parent = null;
 			this.children.splice(index, 1);
 		}
 	}
@@ -157,7 +157,7 @@ export class GameObject {
 	getDescendants(): GameObject[] {
 		return this.children.reduce((children, child) => {
 			return [...children, ...child.getDescendants()];
-		}, []);
+		}, [] as GameObject[]);
 	}
 
 	updateMatrix() {
@@ -221,23 +221,29 @@ export class GameObject {
 			}
 
 			this.renderable.renderables.forEach((renderable) => {
-				setUniforms(this.renderable.programInfo, renderable.uniforms);
+				if (this.renderable) {
+					setUniforms(this.renderable.programInfo, renderable.uniforms);
 
-				setBuffersAndAttributes(
-					gl,
-					this.renderable.programInfo,
-					renderable.attributes
-				);
-
-				if (renderable.attributes.indices) {
-					gl.drawElements(
-						gl.TRIANGLES,
-						renderable.attributes.numElements,
-					  renderable.attributes.elementType || gl.UNSIGNED_SHORT,
-						0
+					setBuffersAndAttributes(
+						gl,
+						this.renderable.programInfo,
+						renderable.attributes
 					);
-				} else {
-					gl.drawArrays(gl.TRIANGLES, 0, renderable.attributes.numElements);
+
+					if (renderable.attributes.indices) {
+						gl.drawElements(
+							gl.TRIANGLES,
+							renderable.attributes.numElements || 0,
+							renderable.attributes.elementType || gl.UNSIGNED_SHORT,
+							0
+						);
+					} else {
+						gl.drawArrays(
+							gl.TRIANGLES,
+							0,
+							renderable.attributes.numElements || 0
+						);
+					}
 				}
 			});
 		}

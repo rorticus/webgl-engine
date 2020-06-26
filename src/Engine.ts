@@ -29,7 +29,7 @@ export class Engine {
 	private _paused: boolean;
 	private _lastFrameTime: number;
 	private _gdt: number;
-	private _step: number;
+	private _step: number = 1;
 	private _scene: Scene;
 	private _gl: WebGLRenderingContext;
 
@@ -54,7 +54,7 @@ export class Engine {
 
 		const names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
 
-		let gl: WebGLRenderingContext = null;
+		let gl: WebGLRenderingContext | null = null;
 
 		for (let i = 0; i < names.length; i++) {
 			try {

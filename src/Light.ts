@@ -5,7 +5,7 @@ export enum LightType {
 }
 
 export class Light {
-    position: vec3;
-    color: vec3;
-    type: LightType;
+    position = vec3.create();
+    color = vec3.create();
+    type: LightType = LightType.Point;
 }

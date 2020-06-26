@@ -7,7 +7,6 @@ import {
 	NativeArray,
 	Primitive,
 	ProgramInfo,
-	Renderable,
 	SingleRenderable,
 	UniformSetter,
 } from "./interfaces";
@@ -161,25 +160,27 @@ export function createUniformSetters(
 
 	for (let i = 0; i < numUniforms; i++) {
 		const uniformInfo = gl.getActiveUniform(program, i);
-		if (isBuiltIn(uniformInfo)) {
-			continue;
-		}
+		if (uniformInfo) {
+			if (isBuiltIn(uniformInfo)) {
+				continue;
+			}
 
-		let name = uniformInfo.name;
-		if (name.substr(-3) === "[0]") {
-			name = name.substr(0, name.length - 3);
-		}
+			let name = uniformInfo.name;
+			if (name.substr(-3) === "[0]") {
+				name = name.substr(0, name.length - 3);
+			}
 
-		const location = gl.getUniformLocation(program, uniformInfo.name);
-		if (location) {
-			uniforms[name] = {
-				setter: setterForUniform(gl, uniformInfo, location, textureUnit),
-				location,
-				info: uniformInfo,
-			};
+			const location = gl.getUniformLocation(program, uniformInfo.name);
+			if (location) {
+				uniforms[name] = {
+					setter: setterForUniform(gl, uniformInfo, location, textureUnit),
+					location,
+					info: uniformInfo,
+				};
 
-			if (uniformInfo.type === gl.SAMPLER_2D) {
-				textureUnit += uniformInfo.size;
+				if (uniformInfo.type === gl.SAMPLER_2D) {
+					textureUnit += uniformInfo.size;
+				}
 			}
 		}
 	}
@@ -197,22 +198,24 @@ export function createAttributeSetters(
 
 	for (let i = 0; i < numAttributes; i++) {
 		const attribInfo = gl.getActiveAttrib(program, i);
-		if (isBuiltIn(attribInfo)) {
-			continue;
-		}
+		if (attribInfo) {
+			if (isBuiltIn(attribInfo)) {
+				continue;
+			}
 
-		let name = attribInfo.name;
-		if (name.substr(-3) === "[0]") {
-			name = name.substr(0, name.length - 3);
-		}
+			let name = attribInfo.name;
+			if (name.substr(-3) === "[0]") {
+				name = name.substr(0, name.length - 3);
+			}
 
-		const location = gl.getAttribLocation(program, attribInfo.name);
-		if (location !== -1) {
-			attributes[name] = {
-				setter: setterForAttrib(gl, attribInfo, location),
-				location,
-				info: attribInfo,
-			};
+			const location = gl.getAttribLocation(program, attribInfo.name);
+			if (location !== -1) {
+				attributes[name] = {
+					setter: setterForAttrib(gl, attribInfo, location),
+					location,
+					info: attribInfo,
+				};
+			}
 		}
 	}
 
@@ -291,6 +294,10 @@ export function createBufferFromTypedArray(
 ) {
 	const buffer = gl.createBuffer();
 
+	if (!buffer) {
+		throw new Error("Tried to create a GL buffer but failed :(");
+	}
+
 	gl.bindBuffer(type, buffer);
 	gl.bufferData(type, typedArray, gl.STATIC_DRAW);
 
@@ -363,48 +370,50 @@ export function createSkyboxTexture(
 ) {
 	const texture = createTexture(gl, gl.TEXTURE_CUBE_MAP);
 
-	loadTextureFromSource(
-		gl,
-		texture,
-		gl.TEXTURE_CUBE_MAP,
-		gl.TEXTURE_CUBE_MAP_POSITIVE_X,
-		sources.positiveX
-	);
-	loadTextureFromSource(
-		gl,
-		texture,
-		gl.TEXTURE_CUBE_MAP,
-		gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
-		sources.negativeX
-	);
-	loadTextureFromSource(
-		gl,
-		texture,
-		gl.TEXTURE_CUBE_MAP,
-		gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
-		sources.positiveY
-	);
-	loadTextureFromSource(
-		gl,
-		texture,
-		gl.TEXTURE_CUBE_MAP,
-		gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
-		sources.negativeY
-	);
-	loadTextureFromSource(
-		gl,
-		texture,
-		gl.TEXTURE_CUBE_MAP,
-		gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
-		sources.positiveZ
-	);
-	loadTextureFromSource(
-		gl,
-		texture,
-		gl.TEXTURE_CUBE_MAP,
-		gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,
-		sources.negativeZ
-	);
+	if (texture) {
+		loadTextureFromSource(
+			gl,
+			texture,
+			gl.TEXTURE_CUBE_MAP,
+			gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+			sources.positiveX
+		);
+		loadTextureFromSource(
+			gl,
+			texture,
+			gl.TEXTURE_CUBE_MAP,
+			gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+			sources.negativeX
+		);
+		loadTextureFromSource(
+			gl,
+			texture,
+			gl.TEXTURE_CUBE_MAP,
+			gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
+			sources.positiveY
+		);
+		loadTextureFromSource(
+			gl,
+			texture,
+			gl.TEXTURE_CUBE_MAP,
+			gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+			sources.negativeY
+		);
+		loadTextureFromSource(
+			gl,
+			texture,
+			gl.TEXTURE_CUBE_MAP,
+			gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
+			sources.positiveZ
+		);
+		loadTextureFromSource(
+			gl,
+			texture,
+			gl.TEXTURE_CUBE_MAP,
+			gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,
+			sources.negativeZ
+		);
+	}
 
 	return texture;
 }

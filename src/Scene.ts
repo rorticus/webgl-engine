@@ -20,7 +20,7 @@ export class Scene {
 
 	camera: Camera;
 
-	skybox: Renderable;
+	skybox: Renderable | null;
 
 	constructor() {
 		this._gameObjects = [];
@@ -120,7 +120,7 @@ export class Scene {
 			gl.drawArrays(
 				gl.TRIANGLES,
 				0,
-				this.skybox.renderables[0].attributes.numElements
+				this.skybox.renderables[0].attributes.numElements || 0
 			);
 			gl.depthFunc(gl.LESS);
 		}

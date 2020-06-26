@@ -12,7 +12,7 @@ export class Camera {
 
 	projectionMatrix: mat4;
 	cameraMatrix: mat4;
-	viewProjectionMatrix: mat4;
+	viewProjectionMatrix = mat4.create();
 
 	constructor() {
 		this.projectionMatrix = mat4.create();
@@ -37,9 +37,6 @@ export class Camera {
         const viewMatrix = mat4.create();
         mat4.invert(viewMatrix, cameraMatrix);
 
-        const viewProjectionMatrix = mat4.create();
-        mat4.multiply(viewProjectionMatrix, this.projectionMatrix, viewMatrix);
-
-        this.viewProjectionMatrix = viewProjectionMatrix;
+        mat4.multiply(this.viewProjectionMatrix, this.projectionMatrix, viewMatrix);
     }
 }
