@@ -2,8 +2,8 @@
   "name": "webgl-engine",
   "version": "1.0.0",
   "description": "WebGL game engine for creating TypeScript games",
-  "main": "lib/Engine.js",
-  "types": "lib/Engine.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "directories": {
     "example": "examples"
   },
