@@ -19,7 +19,6 @@ export class GameObject {
 	animation: AnimationStateMachine;
 
 	// transformation
-	up: vec3;
 	position: vec3;
 	rotation: quat;
 	scale: vec3;
@@ -34,7 +33,6 @@ export class GameObject {
 		this.visible = true;
 		this.components = [];
 
-		this.up = vec3.fromValues(0, 1, 0);
 		this.position = vec3.fromValues(0, 0, 0);
 		this.rotation = quat.create();
 		this.scale = vec3.fromValues(1, 1, 1);
@@ -249,5 +247,24 @@ export class GameObject {
 		}
 
 		this.children.forEach((child) => child.render(context));
+	}
+
+	clone(parent?: GameObject) {
+		const clone = new GameObject();
+
+		clone.id = this.id;
+		clone.position = vec3.clone(this.position);
+		clone.rotation = quat.clone(this.rotation);
+		clone.scale = vec3.clone(this.scale);
+		clone.renderable = this.renderable;
+		clone.visible = this.visible;
+		clone.children = this.children.map((child) => child.clone(clone));
+		clone.components = [...this.components];
+
+		if (parent) {
+			clone.parent = parent;
+		}
+
+		return clone;
 	}
 }
