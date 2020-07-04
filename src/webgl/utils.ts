@@ -13,6 +13,7 @@ import {
 import { GameObject } from "../GameObject";
 import { quad } from "./primitives";
 import { Engine } from "../Engine";
+import { vec3 } from "gl-matrix";
 
 function isBuiltIn(info: WebGLActiveInfo) {
 	const name = info.name;
@@ -633,16 +634,31 @@ export function sprite(engine: Engine, source: string | HTMLCanvasElement) {
 		}
 
 		engine.gl.texParameteri(
-		  engine.gl.TEXTURE_2D,
-		  engine.gl.TEXTURE_WRAP_S,
-		  engine.gl.CLAMP_TO_EDGE
+			engine.gl.TEXTURE_2D,
+			engine.gl.TEXTURE_WRAP_S,
+			engine.gl.CLAMP_TO_EDGE
 		);
 		engine.gl.texParameteri(
-		  engine.gl.TEXTURE_2D,
-		  engine.gl.TEXTURE_WRAP_T,
-		  engine.gl.CLAMP_TO_EDGE
+			engine.gl.TEXTURE_2D,
+			engine.gl.TEXTURE_WRAP_T,
+			engine.gl.CLAMP_TO_EDGE
 		);
 	}
 
 	return gameObject;
+}
+
+export function positionSpriteOnCanvas(engine: Engine, gameObject: GameObject, left: number, top: number, width: number, height: number) {
+	const halfWidth = engine.gl.canvas.width / 2;
+	const halfHeight = engine.gl.canvas.height / 2;
+
+	const trueWidth = width / engine.gl.canvas.width;
+	const trueHeight = height / engine.gl.canvas.height;
+
+	gameObject.position = vec3.fromValues(
+		(left + width / 2 - halfWidth) / halfWidth,
+		(engine.gl.canvas.height - top - height / 2 - halfHeight) / halfHeight,
+		0
+	);
+	gameObject.scale = vec3.fromValues(trueWidth, trueHeight, 1);
 }

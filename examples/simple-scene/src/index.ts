@@ -7,8 +7,8 @@ import { AnimationWrapMode } from "../../../src/animation/AnimationState";
 import {
 	createAttributesFromArrays,
 	createSkyboxTexture,
-	createTexture,
-	sprite,
+	createTexture, positionSpriteOnCanvas,
+	sprite
 } from "../../../src/webgl/utils";
 import { quad } from "../../../src/webgl/primitives";
 import { GameObject } from "../../../src/GameObject";
@@ -87,11 +87,11 @@ function makeTextCanvas(text: string, width: number, height: number) {
 	return textCtx.canvas;
 }
 
-const g = sprite(engine, makeTextCanvas("hmmm", 100, 50));
-g.scale = vec3.fromValues(0.25, 0.15, 1);
+const g = sprite(engine, makeTextCanvas("hello, world", 100, 50));
+positionSpriteOnCanvas(engine, g, 0, 0, 100, 50);
 
 scene.addGameObject(mushroom);
-scene.addGameObject(g);
+scene.addGameObject(g,1);
 
 engine.scene = scene;
 engine.start();

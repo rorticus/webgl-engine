@@ -69,6 +69,7 @@ export class Engine {
 		}
 
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
 
 		// getting this extension has the side effect of allowing gl.FLOAT texture types (which we need for skinning)
 		gl.getExtension("OES_texture_float");

@@ -13,7 +13,7 @@ import { quad } from "./webgl/primitives";
 import { GameComponentContext } from "./interfaces";
 
 export class Scene {
-	private _gameObjects: GameObject[];
+	private _layers: GameObject[][] = [[]];
 
 	ambientColor = vec3.fromValues(0.1, 0.1, 0.1);
 	pointLights: Light[];
@@ -23,7 +23,6 @@ export class Scene {
 	skybox: Renderable | null;
 
 	constructor() {
-		this._gameObjects = [];
 		this.camera = new Camera();
 
 		const light1 = new Light();
@@ -67,19 +66,27 @@ export class Scene {
 	}
 
 	update(context: GameComponentContext) {
-		this._gameObjects.forEach((go) => go.update(context));
+		this._layers.forEach((layer) =>
+			layer.forEach((gameObject) => gameObject.update(context))
+		);
 	}
 
-	addGameObject(go: GameObject) {
-		this._gameObjects.push(go);
+	addGameObject(go: GameObject, layer = 0) {
+		if (this._layers[layer] === undefined) {
+			this._layers[layer] = [];
+		}
+
+		this._layers[layer].push(go);
 	}
 
 	removeGameObject(go: GameObject) {
-		const index = this._gameObjects.indexOf(go);
+		this._layers.forEach((layer) => {
+			const index = layer.indexOf(go);
 
-		if (index >= 0) {
-			this._gameObjects.splice(index, 1);
-		}
+			if (index >= 0) {
+				layer.splice(index, 1);
+			}
+		});
 	}
 
 	render(
@@ -96,33 +103,41 @@ export class Scene {
 			pointLights: this.pointLights,
 		};
 
-		this._gameObjects.forEach((gameObject) => {
-			gameObject.render(renderContext);
-		});
+		this._layers.forEach((layer, index) => {
+			gl.clear(gl.DEPTH_BUFFER_BIT);
 
-		if (this.skybox) {
-			gl.depthFunc(gl.LEQUAL);
-
-			const inverse = mat4.create();
-			mat4.invert(inverse, this.camera.viewProjectionMatrix);
-
-			gl.useProgram(this.skybox.programInfo.program);
-			setBuffersAndAttributes(
-				gl,
-				this.skybox.programInfo,
-				this.skybox.renderables[0].attributes
-			);
-			setUniforms(this.skybox.programInfo, {
-				...this.skybox.renderables[0].uniforms,
-				u_viewDirectionProjectionInverse: inverse,
+			gl.enable(gl.BLEND);
+			gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+			layer.forEach((gameObject) => {
+				gameObject.render(renderContext);
 			});
 
-			gl.drawArrays(
-				gl.TRIANGLES,
-				0,
-				this.skybox.renderables[0].attributes.numElements || 0
-			);
-			gl.depthFunc(gl.LESS);
-		}
+			if (index === 0) {
+				if (this.skybox) {
+					gl.depthFunc(gl.LEQUAL);
+
+					const inverse = mat4.create();
+					mat4.invert(inverse, this.camera.viewProjectionMatrix);
+
+					gl.useProgram(this.skybox.programInfo.program);
+					setBuffersAndAttributes(
+						gl,
+						this.skybox.programInfo,
+						this.skybox.renderables[0].attributes
+					);
+					setUniforms(this.skybox.programInfo, {
+						...this.skybox.renderables[0].uniforms,
+						u_viewDirectionProjectionInverse: inverse,
+					});
+
+					gl.drawArrays(
+						gl.TRIANGLES,
+						0,
+						this.skybox.renderables[0].attributes.numElements || 0
+					);
+					gl.depthFunc(gl.LESS);
+				}
+			}
+		});
 	}
 }
