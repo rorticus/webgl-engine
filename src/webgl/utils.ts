@@ -10,6 +10,9 @@ import {
 	SingleRenderable,
 	UniformSetter,
 } from "./interfaces";
+import { GameObject } from "../GameObject";
+import { quad } from "./primitives";
+import { Engine } from "../Engine";
 
 function isBuiltIn(info: WebGLActiveInfo) {
 	const name = info.name;
@@ -452,6 +455,21 @@ export function createAttribsFromArrays(
 		};
 	}
 
+	if (arrays.texcoord) {
+		attribs["a_texcoord"] = {
+			buffer: createBufferFromTypedArray(
+				gl,
+				new Float32Array(arrays.texcoord.data)
+			),
+			numItems: arrays.texcoord.data.length / arrays.texcoord.numComponents,
+			itemSize: arrays.texcoord.numComponents,
+			type: gl.STATIC_DRAW,
+			normalize: false,
+			stride: 0,
+			offset: 0,
+		};
+	}
+
 	return attribs;
 }
 
@@ -573,4 +591,58 @@ export function nativeArrayFromAccessor(
 	}
 
 	throw new Error(`Unknown native array type ${accessor.componentType}`);
+}
+
+export function sprite(engine: Engine, source: string | HTMLCanvasElement) {
+	const gameObject = new GameObject();
+
+	const texture = createTexture(engine.gl);
+
+	if (texture) {
+		gameObject.renderable = {
+			programInfo: engine.programs.sprite,
+			renderables: [
+				{
+					attributes: createAttributesFromArrays(engine.gl, quad()),
+					uniforms: {
+						u_texture: texture,
+					},
+				},
+			],
+		};
+
+		engine.gl.bindTexture(engine.gl.TEXTURE_2D, texture);
+
+		if (typeof source === "string") {
+			loadTextureFromSource(
+				engine.gl,
+				texture,
+				engine.gl.TEXTURE_2D,
+				engine.gl.TEXTURE_2D,
+				source
+			);
+		} else {
+			engine.gl.texImage2D(
+				engine.gl.TEXTURE_2D,
+				0,
+				engine.gl.RGBA,
+				engine.gl.RGBA,
+				engine.gl.UNSIGNED_BYTE,
+				source
+			);
+		}
+
+		engine.gl.texParameteri(
+		  engine.gl.TEXTURE_2D,
+		  engine.gl.TEXTURE_WRAP_S,
+		  engine.gl.CLAMP_TO_EDGE
+		);
+		engine.gl.texParameteri(
+		  engine.gl.TEXTURE_2D,
+		  engine.gl.TEXTURE_WRAP_T,
+		  engine.gl.CLAMP_TO_EDGE
+		);
+	}
+
+	return gameObject;
 }

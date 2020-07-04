@@ -15,13 +15,14 @@ import {
 } from "./webgl/shaders/skybox";
 
 import {
-	vertexShader as skinnedVertexShader,
-	fragmentShader as skinnedFragmentShader,
-} from "./webgl/shaders/skinned";
+	vertexShader as spriteVertexShader,
+	fragmentShader as spriteFragmentShader,
+} from "./webgl/shaders/sprite";
 
 interface Programs {
 	standard: ProgramInfo;
 	skybox: ProgramInfo;
+	sprite: ProgramInfo;
 }
 
 export class Engine {
@@ -71,11 +72,12 @@ export class Engine {
 
 		// getting this extension has the side effect of allowing gl.FLOAT texture types (which we need for skinning)
 		gl.getExtension("OES_texture_float");
-	  	gl.getExtension('OES_element_index_uint');
+		gl.getExtension("OES_element_index_uint");
 
 		this.programs = {
 			standard: createProgram(gl, standardVertexShader, standardFragmentShader),
 			skybox: createProgram(gl, skyboxVertexShader, skyboxFragmentShader),
+			sprite: createProgram(gl, spriteVertexShader, spriteFragmentShader),
 		};
 
 		this._gl = gl;
@@ -125,7 +127,7 @@ export class Engine {
 
 		this._scene.update({
 			services: {},
-			deltaInSeconds
+			deltaInSeconds,
 		});
 	}
 

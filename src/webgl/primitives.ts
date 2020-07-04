@@ -140,6 +140,10 @@ export function quad(): Primitive {
 		position: {
 			data: [-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1],
 			numComponents: 2,
-		}
+		},
+		texcoord: {
+			data: [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1],
+			numComponents: 2,
+		},
 	};
 }

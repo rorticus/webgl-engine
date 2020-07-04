@@ -4,6 +4,14 @@ import { vec3 } from "gl-matrix";
 import { loadGLB, loadGLTF } from "../../../src/webgl/gltf";
 import { OrbitCamera } from "../../../src/cameras/OrbitCamera";
 import { AnimationWrapMode } from "../../../src/animation/AnimationState";
+import {
+	createAttributesFromArrays,
+	createSkyboxTexture,
+	createTexture,
+	sprite,
+} from "../../../src/webgl/utils";
+import { quad } from "../../../src/webgl/primitives";
+import { GameObject } from "../../../src/GameObject";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -63,9 +71,27 @@ scene.loadSkymap(engine.gl, engine.programs.skybox, {
 	positiveZ: require("./skybox6.jpg").default,
 });
 
-console.log(mushroom);
+const textCtx = document.createElement("canvas").getContext("2d");
+
+// Puts text in center of canvas.
+function makeTextCanvas(text: string, width: number, height: number) {
+	textCtx.canvas.width = width;
+	textCtx.canvas.height = height;
+	textCtx.transform(1, 0, 0, -1, 0, textCtx.canvas.height);
+	textCtx.font = "20px monospace";
+	textCtx.textAlign = "center";
+	textCtx.textBaseline = "middle";
+	textCtx.fillStyle = "black";
+	textCtx.clearRect(0, 0, textCtx.canvas.width, textCtx.canvas.height);
+	textCtx.fillText(text, width / 2, height / 2);
+	return textCtx.canvas;
+}
+
+const g = sprite(engine, makeTextCanvas("hmmm", 100, 50));
+g.scale = vec3.fromValues(0.25, 0.15, 1);
 
 scene.addGameObject(mushroom);
+scene.addGameObject(g);
 
 engine.scene = scene;
 engine.start();
