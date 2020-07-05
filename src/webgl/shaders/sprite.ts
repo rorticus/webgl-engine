@@ -8,7 +8,7 @@ varying vec2 v_texcoord;
 
 void main() {
     gl_Position = u_matrix * a_position;
-    v_texcoord = a_texcoord;
+    v_texcoord = vec2(a_texcoord.x, 1.0 - a_texcoord.y);
 }
 `;
 
