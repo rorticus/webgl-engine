@@ -65,7 +65,15 @@ scene.loadSkymap(engine.gl, engine.programs.skybox, {
 });
 
 scene.addGameObject(mushroom);
-mushroom.animation.transitionTo('Walk', 33);
+mushroom.animation.transitionTo('Idle', 0.33);
+mushroom.animation.states['Crouch'].wrapMode = AnimationWrapMode.None;
+mushroom.animation.addTransition('Crouch', 'Idle', (context, gameObject, playDuration, totalDuration) => {
+	return playDuration > totalDuration;
+}, 0.33);
+
+setTimeout(() => {
+	mushroom.animation.transitionTo('Crouch', 0.33);
+}, 5000);
 
 engine.scene = scene;
 engine.start();
