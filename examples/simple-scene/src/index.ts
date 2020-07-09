@@ -1,17 +1,9 @@
 import { Engine } from "../../../src/Engine";
 import { Scene } from "../../../src/Scene";
 import { vec3 } from "gl-matrix";
-import { loadGLB, loadGLTF } from "../../../src/webgl/gltf";
+import { loadGLB } from "../../../src/webgl/gltf";
 import { OrbitCamera } from "../../../src/cameras/OrbitCamera";
 import { AnimationWrapMode } from "../../../src/animation/AnimationState";
-import {
-	createAttributesFromArrays,
-	createSkyboxTexture,
-	createTexture, positionSpriteOnCanvas,
-	sprite
-} from "../../../src/webgl/utils";
-import { quad } from "../../../src/webgl/primitives";
-import { GameObject } from "../../../src/GameObject";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -24,7 +16,7 @@ const engine = new Engine(canvas);
 const mushroom = loadGLB(
 	engine.gl,
 	engine.programs.standard,
-	require("./map.glb")
+	require("./character1.glb")
 );
 
 const orbitCamera = new OrbitCamera();
@@ -56,6 +48,7 @@ frame();
 orbitCamera.radius = 5;
 orbitCamera.elevation = 5;
 orbitCamera.azimuth = (45 * Math.PI) / 180;
+orbitCamera.lookAt = vec3.fromValues(0, 2, 0);
 
 const scene = new Scene();
 scene.camera = orbitCamera;
@@ -71,27 +64,8 @@ scene.loadSkymap(engine.gl, engine.programs.skybox, {
 	positiveZ: require("./skybox6.jpg").default,
 });
 
-const textCtx = document.createElement("canvas").getContext("2d");
-
-// Puts text in center of canvas.
-function makeTextCanvas(text: string, width: number, height: number) {
-	textCtx.canvas.width = width;
-	textCtx.canvas.height = height;
-	textCtx.transform(1, 0, 0, -1, 0, textCtx.canvas.height);
-	textCtx.font = "20px monospace";
-	textCtx.textAlign = "center";
-	textCtx.textBaseline = "middle";
-	textCtx.fillStyle = "black";
-	textCtx.clearRect(0, 0, textCtx.canvas.width, textCtx.canvas.height);
-	textCtx.fillText(text, width / 2, height / 2);
-	return textCtx.canvas;
-}
-
-const g = sprite(engine, makeTextCanvas("hello, world", 100, 50));
-positionSpriteOnCanvas(engine, g, 0, 0, 100, 50);
-
 scene.addGameObject(mushroom);
-scene.addGameObject(g,1);
+mushroom.animation.transitionTo('Walk', 33);
 
 engine.scene = scene;
 engine.start();

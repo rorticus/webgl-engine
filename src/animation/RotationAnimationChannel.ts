@@ -7,7 +7,7 @@ export class RotationAnimationChannel extends AnimationChannel<quat> {
 
 		const result = quat.create();
 
-		quat.lerp(result, min, max, t);
+		quat.slerp(result, min, max, t);
 
 		return result;
 	}

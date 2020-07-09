@@ -61,7 +61,10 @@ export class AnimationStateMachine {
 						this.state = this.nextState;
 						this.nextState = undefined;
 					} else {
-						const t = Math.min(this.transitionTime / this.transitionDuration, 1);
+						const t = Math.min(
+							this.transitionTime / this.transitionDuration,
+							1
+						);
 
 						currentState.update(context);
 
@@ -91,6 +94,7 @@ export class AnimationStateMachine {
 			}
 		} else if (this.nextState) {
 			this.state = this.nextState;
+			this.nextState = undefined;
 			this.states[this.state].reset();
 		} else {
 			this.initialState && this.transitionTo(this.initialState, 0);

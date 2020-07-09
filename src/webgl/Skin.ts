@@ -60,6 +60,8 @@ export class Skin {
 			mat4.mul(dst, dst, this.inverseBindMatrices[j] as mat4);
 		}
 
+		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+
 		gl.bindTexture(gl.TEXTURE_2D, this.jointTexture);
 		gl.texImage2D(
 			gl.TEXTURE_2D,
@@ -73,6 +75,7 @@ export class Skin {
 			this.jointData
 		);
 
+		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
 		// const fb = gl.createFramebuffer();
 		// gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
 		// gl.framebufferTexture2D(
@@ -82,6 +85,7 @@ export class Skin {
 		// 	this.jointTexture,
 		// 	0
 		// );
+		//
 		//
 		// const textureData = new Float32Array(32);
 		// gl.readPixels(0, 0, 4, 2, gl.RGBA, gl.FLOAT, textureData);

@@ -313,7 +313,7 @@ export function loadGLTF(
 	nodes.forEach((node, index) => {
 		if (node.skin !== undefined && gltfNodes[index].renderable) {
 			// @ts-ignore
-		  gltfNodes[index].renderable.skin = skins[node.skin];
+			gltfNodes[index].renderable.skin = skins[node.skin];
 		}
 	});
 
@@ -337,7 +337,7 @@ export function loadGLTF(
 			samplers = [],
 		} = animation;
 
-		const animationChannels: AnimationChannel[] = [];
+		let animationChannels: AnimationChannel[] = [];
 
 		channels.forEach((channel) => {
 			const { sampler: samplerIndex = 0, target } = channel;

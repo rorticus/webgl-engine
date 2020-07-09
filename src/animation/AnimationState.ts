@@ -12,6 +12,7 @@ export class AnimationState {
 	channels: AnimationChannel[] = [];
 	wrapMode: AnimationWrapMode = AnimationWrapMode.None;
 	duration: number = 0;
+	timeScale = 1;
 
 	reset() {
 		this.time = 0;
@@ -26,7 +27,7 @@ export class AnimationState {
 			);
 		}
 
-		let adjustedTime = this.time;
+		let adjustedTime = this.time * this.timeScale;
 
 		if (this.time > this.duration) {
 			if (this.wrapMode === AnimationWrapMode.None) {
