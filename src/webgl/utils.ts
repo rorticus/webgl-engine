@@ -357,6 +357,12 @@ export function loadTextureFromSource(
 	image.onload = () => {
 		gl.bindTexture(type, texture);
 		gl.texImage2D(target, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+		if (target === gl.TEXTURE_2D) {
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		}
 	};
 	image.src = source;
 }
@@ -648,7 +654,14 @@ export function sprite(engine: Engine, source: string | HTMLCanvasElement) {
 	return gameObject;
 }
 
-export function positionSpriteOnCanvas(engine: Engine, gameObject: GameObject, left: number, top: number, width: number, height: number) {
+export function positionSpriteOnCanvas(
+	engine: Engine,
+	gameObject: GameObject,
+	left: number,
+	top: number,
+	width: number,
+	height: number
+) {
 	const halfWidth = engine.gl.canvas.width / 2;
 	const halfHeight = engine.gl.canvas.height / 2;
 

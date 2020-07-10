@@ -4,6 +4,7 @@ import { vec3 } from "gl-matrix";
 import { loadGLB } from "../../../src/webgl/gltf";
 import { OrbitCamera } from "../../../src/cameras/OrbitCamera";
 import { AnimationWrapMode } from "../../../src/animation/AnimationState";
+import { createTexture, loadTextureFromSource } from "../../../src/webgl/utils";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -65,14 +66,32 @@ scene.loadSkymap(engine.gl, engine.programs.skybox, {
 });
 
 scene.addGameObject(mushroom);
-mushroom.animation.transitionTo('Idle', 0.33);
-mushroom.animation.states['Crouch'].wrapMode = AnimationWrapMode.None;
-mushroom.animation.addTransition('Crouch', 'Idle', (context, gameObject, playDuration, totalDuration) => {
-	return playDuration > totalDuration;
-}, 0.33);
+mushroom.animation.transitionTo("Idle", 0.33);
+mushroom.animation.states["Crouch"].wrapMode = AnimationWrapMode.None;
+mushroom.animation.addTransition(
+	"Crouch",
+	"Idle",
+	(context, gameObject, playDuration, totalDuration) => {
+		return playDuration > totalDuration;
+	},
+	0.33
+);
+const character = mushroom.getObjectById("characterMedium", true);
+const texture = createTexture(engine.gl);
+character.renderable.renderables[0].uniforms[
+	"u_texture0"
+] = texture;
+loadTextureFromSource(
+  engine.gl,
+  texture,
+  engine.gl.TEXTURE_2D,
+  engine.gl.TEXTURE_2D,
+  require("./robot.png").default
+)
+character.renderable.renderables[0].uniforms["u_hasTexture"] = true;
 
 setTimeout(() => {
-	mushroom.animation.transitionTo('Crouch', 0.33);
+	mushroom.animation.transitionTo("Crouch", 0.33);
 }, 5000);
 
 engine.scene = scene;

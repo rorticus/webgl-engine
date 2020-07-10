@@ -64,7 +64,7 @@ precision mediump float;
 uniform vec3 u_color;
 uniform vec3 u_ambientColor;
 uniform sampler2D u_texture0;
-uniform bool u_isTextured;
+uniform bool u_hasTexture;
 
 const int NUM_POSITIONAL_LIGHTS = 2;
 
@@ -85,7 +85,7 @@ vec3 calculatePositionalLights(vec3 normal) {
 		vec3 lightDirection = normalize(v_surfaceToLight[i]);
 		float light = max(dot(normal, -lightDirection), 0.0);
 		
-		if(u_isTextured) {
+		if(u_hasTexture) {
 			diffuse += u_lightWorldColor[i] * texture2D(u_texture0, v_texcoord0).xyz * light;
 		} else {
 			diffuse += u_lightWorldColor[i] * u_color * light;
