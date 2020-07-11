@@ -5,6 +5,10 @@ export class TranslationAnimationChannel extends AnimationChannel<vec3> {
 	getValue(time: number): vec3 {
 		const [min, max, t] = this.getBounds(time);
 
+		if (min && !max) {
+			return min;
+		}
+
 		const result = vec3.create();
 
 		vec3.lerp(result, min, max, t);

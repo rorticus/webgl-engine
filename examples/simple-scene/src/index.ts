@@ -66,16 +66,6 @@ scene.loadSkymap(engine.gl, engine.programs.skybox, {
 });
 
 scene.addGameObject(mushroom);
-mushroom.animation.transitionTo("Idle", 0.33);
-mushroom.animation.states["Crouch"].wrapMode = AnimationWrapMode.None;
-mushroom.animation.addTransition(
-	"Crouch",
-	"Idle",
-	(context, gameObject, playDuration, totalDuration) => {
-		return playDuration > totalDuration;
-	},
-	0.33
-);
 const character = mushroom.getObjectById("characterMedium", true);
 const texture = createTexture(engine.gl);
 character.renderable.renderables[0].uniforms[
@@ -90,9 +80,7 @@ loadTextureFromSource(
 )
 character.renderable.renderables[0].uniforms["u_hasTexture"] = true;
 
-setTimeout(() => {
-	mushroom.animation.transitionTo("Crouch", 0.33);
-}, 5000);
+mushroom.animation.transitionTo('Twerk', 0);
 
 engine.scene = scene;
 engine.start();

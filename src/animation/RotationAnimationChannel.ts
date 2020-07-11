@@ -5,6 +5,10 @@ export class RotationAnimationChannel extends AnimationChannel<quat> {
 	getValue(time: number): quat {
 		const [min, max, t] = this.getBounds(time);
 
+		if (min && !max) {
+			return min;
+		}
+
 		const result = quat.create();
 
 		quat.slerp(result, min, max, t);

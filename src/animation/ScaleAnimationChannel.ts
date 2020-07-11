@@ -1,23 +1,22 @@
-import {AnimationChannel} from "./AnimationChannel";
-import {vec3} from "gl-matrix";
+import { AnimationChannel } from "./AnimationChannel";
+import { vec3 } from "gl-matrix";
 
 export class ScaleAnimationChannel extends AnimationChannel<vec3> {
-    getValue(time: number): vec3 {
-        const [min, max, t] = this.getBounds(time);
+	getValue(time: number): vec3 {
+		const [min, max, t] = this.getBounds(time);
 
-        const result = vec3.create();
+		if (min && !max) {
+			return min;
+		}
 
-        vec3.lerp(result, min, max, t);
+		const result = vec3.create();
 
-        return result;
-    }
+		vec3.lerp(result, min, max, t);
 
-    apply(value: vec3, weight = 1) {
-        vec3.lerp(
-            this.gameObject.scale,
-            this.gameObject.scale,
-            value,
-            weight
-        );
-    }
+		return result;
+	}
+
+	apply(value: vec3, weight = 1) {
+		vec3.lerp(this.gameObject.scale, this.gameObject.scale, value, weight);
+	}
 }
