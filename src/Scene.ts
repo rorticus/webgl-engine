@@ -89,6 +89,19 @@ export class Scene {
 		});
 	}
 
+	getObjectById(id: string) {
+		for (let i = 0; i < this._layers.length; i++) {
+			for (let j = 0; j < this._layers[i].length; j++) {
+				const go = this._layers[i][j].getObjectById(id, true);
+				if (go) {
+					return go;
+				}
+			}
+		}
+
+		return undefined;
+	}
+
 	render(
 		viewportWidth: number,
 		viewportHeight: number,
