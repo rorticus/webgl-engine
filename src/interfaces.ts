@@ -1,6 +1,8 @@
 import {mat4, vec3, vec4} from "gl-matrix";
 import {Light} from "./Light";
 import {GameObject} from "./GameObject";
+import { MouseService } from "./services/MouseService";
+import { Engine } from "./Engine";
 
 export interface SceneRenderContext {
     gl: WebGLRenderingContext;
@@ -10,7 +12,7 @@ export interface SceneRenderContext {
 }
 
 export interface GameComponentContext {
-    services: {};
+    engine: Engine;
     deltaInSeconds: number;
 }
 

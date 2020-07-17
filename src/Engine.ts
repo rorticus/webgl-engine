@@ -127,7 +127,7 @@ export class Engine {
 		}
 
 		this._scene.update({
-			services: {},
+			engine: this,
 			deltaInSeconds,
 		});
 	}
