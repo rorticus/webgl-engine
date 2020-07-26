@@ -18,6 +18,7 @@ import {
 	vertexShader as spriteVertexShader,
 	fragmentShader as spriteFragmentShader,
 } from "./webgl/shaders/sprite";
+import { KeyboardService } from "./services/KeyboardService";
 
 interface Programs {
 	standard: ProgramInfo;
@@ -37,6 +38,7 @@ export class Engine {
 	programs: Programs;
 
 	mouseService: MouseService;
+	keyboardService: KeyboardService;
 
 	get gl() {
 		return this._gl;
@@ -89,6 +91,7 @@ export class Engine {
 		this._scene = new Scene();
 
 		this.mouseService = new MouseService(canvas);
+		this.keyboardService = new KeyboardService();
 
 		const frame = () => {
 			const now = Date.now();
