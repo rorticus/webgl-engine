@@ -42,8 +42,14 @@ export class GameObject {
 		this.animation = new AnimationStateMachine();
 	}
 
-	addComponent(component: GameComponent) {
-		this.components.push(component);
+	addComponent(component: GameComponent | GameComponent["update"]) {
+		this.components.push(
+			typeof component === "function" ? { update: component } : component
+		);
+	}
+
+	findComponent<T extends GameComponent = GameComponent>(tag: string) {
+		return this.components.find((g) => g.tag === tag) as T;
 	}
 
 	rotate(radianX: number, radianY: number, radianZ: number) {
@@ -182,7 +188,7 @@ export class GameObject {
 
 	update(context: GameComponentContext) {
 		this.computeWorldMatrix();
-		this.components.forEach((component) => component(context, this));
+		this.components.forEach((component) => component.update(context, this));
 
 		this.children.forEach((child) => child.update(context));
 

@@ -84,3 +84,25 @@ mushroom.animation.transitionTo('Twerk', 0);
 
 engine.scene = scene;
 engine.start();
+
+class MovingComponent {
+	tag: 'Moving';
+	count = 0;
+
+	update() {
+	}
+
+	increment() {
+		this.count++;
+
+		console.log('incremented');
+	}
+
+	decrement() {
+		this.count--;
+	}
+}
+
+mushroom.addComponent(new MovingComponent());
+const moving = mushroom.findComponent<MovingComponent>('moving');
+moving.increment();
