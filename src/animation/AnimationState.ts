@@ -22,14 +22,14 @@ export class AnimationState {
 		this.time += context.deltaInSeconds;
 
 		if (this.duration === 0) {
-			this.duration = Math.max(
-				...this.channels.map((channel) => channel.getDuration())
-			);
+			this.duration =
+				Math.max(...this.channels.map((channel) => channel.getDuration())) *
+				this.timeScale;
 		}
 
 		let adjustedTime = this.time * this.timeScale;
 
-		if (this.time > this.duration) {
+		if (adjustedTime > this.duration) {
 			if (this.wrapMode === AnimationWrapMode.None) {
 				return;
 			} else if (this.wrapMode === AnimationWrapMode.Loop) {
