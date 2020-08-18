@@ -17,7 +17,7 @@ const engine = new Engine(canvas);
 const mushroom = loadGLB(
 	engine.gl,
 	engine.programs.standard,
-	require("./character1.glb")
+	require("./character.glb")
 );
 
 const orbitCamera = new OrbitCamera();
@@ -80,29 +80,8 @@ loadTextureFromSource(
 )
 character.renderable.renderables[0].uniforms["u_hasTexture"] = true;
 
-mushroom.animation.transitionTo('Twerk', 0);
+mushroom.animation.transitionTo('Walk', 0);
+mushroom.animation.states['Walk'].timeScale = 2;
 
 engine.scene = scene;
 engine.start();
-
-class MovingComponent {
-	tag: 'Moving';
-	count = 0;
-
-	update() {
-	}
-
-	increment() {
-		this.count++;
-
-		console.log('incremented');
-	}
-
-	decrement() {
-		this.count--;
-	}
-}
-
-mushroom.addComponent(new MovingComponent());
-const moving = mushroom.findComponent<MovingComponent>('moving');
-moving.increment();

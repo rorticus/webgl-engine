@@ -36,6 +36,7 @@ export class AnimationState {
 				while (adjustedTime > this.duration) {
 					adjustedTime -= this.duration;
 				}
+				this.time = adjustedTime;
 			} else if (this.wrapMode === AnimationWrapMode.Bounce) {
 				while (adjustedTime > this.duration * 2) {
 					adjustedTime -= this.duration * 2;
@@ -44,6 +45,8 @@ export class AnimationState {
 				if (adjustedTime > this.duration) {
 					adjustedTime = this.duration * 2 - adjustedTime;
 				}
+
+				this.time = adjustedTime;
 			}
 		}
 
