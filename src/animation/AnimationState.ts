@@ -19,39 +19,33 @@ export class AnimationState {
 	}
 
 	update(context: GameComponentContext, weight = 1) {
-		this.time += context.deltaInSeconds;
+		this.time += context.deltaInSeconds * this.timeScale;
 
 		if (this.duration === 0) {
 			this.duration =
-				Math.max(...this.channels.map((channel) => channel.getDuration())) *
-				this.timeScale;
+				Math.max(...this.channels.map((channel) => channel.getDuration()));
 		}
-
-		let adjustedTime = this.time * this.timeScale;
-
-		if (adjustedTime > this.duration) {
+		
+		if (this.time > this.duration) {
 			if (this.wrapMode === AnimationWrapMode.None) {
 				return;
 			} else if (this.wrapMode === AnimationWrapMode.Loop) {
-				while (adjustedTime > this.duration) {
-					adjustedTime -= this.duration;
+				while (this.time > this.duration) {
+					this.time -= this.duration;
 				}
-				this.time = adjustedTime;
 			} else if (this.wrapMode === AnimationWrapMode.Bounce) {
-				while (adjustedTime > this.duration * 2) {
-					adjustedTime -= this.duration * 2;
+				while (this.time > this.duration * 2) {
+					this.time -= this.duration * 2;
 				}
 
-				if (adjustedTime > this.duration) {
-					adjustedTime = this.duration * 2 - adjustedTime;
+				if (this.time > this.duration) {
+					this.time = this.duration * 2 - this.time;
 				}
-
-				this.time = adjustedTime;
 			}
 		}
 
 		this.channels.forEach((channel) => {
-			const value = channel.getValue(adjustedTime);
+			const value = channel.getValue(this.time);
 			channel.apply(value, weight);
 		});
 	}
