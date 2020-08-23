@@ -107,4 +107,16 @@ export class AnimationStateMachine {
 		this.transitionDuration = duration;
 		this.transitionTime = 0;
 	}
+
+	canTransition(to: string) {
+		if (this.state && this.stateTransitions[this.state]) {
+			for (let i = 0; i < this.stateTransitions[this.state].length; i++) {
+				if (this.stateTransitions[this.state][i].to === to) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
 }
