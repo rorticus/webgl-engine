@@ -133,6 +133,8 @@ export class Engine {
 			engine: this,
 			deltaInSeconds,
 		});
+
+		this.keyboardService.clearPressState();
 	}
 
 	render() {

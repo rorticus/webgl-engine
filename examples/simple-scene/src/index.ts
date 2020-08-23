@@ -5,6 +5,7 @@ import { loadGLB } from "../../../src/webgl/gltf";
 import { OrbitCamera } from "../../../src/cameras/OrbitCamera";
 import { AnimationWrapMode } from "../../../src/animation/AnimationState";
 import { createTexture, loadTextureFromSource } from "../../../src/webgl/utils";
+import { KeyboardKey } from "../../../src/services/KeyboardService";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -68,20 +69,24 @@ scene.loadSkymap(engine.gl, engine.programs.skybox, {
 scene.addGameObject(mushroom);
 const character = mushroom.getObjectById("characterMedium", true);
 const texture = createTexture(engine.gl);
-character.renderable.renderables[0].uniforms[
-	"u_texture0"
-] = texture;
+character.renderable.renderables[0].uniforms["u_texture0"] = texture;
 loadTextureFromSource(
-  engine.gl,
-  texture,
-  engine.gl.TEXTURE_2D,
-  engine.gl.TEXTURE_2D,
-  require("./robot.png").default
-)
+	engine.gl,
+	texture,
+	engine.gl.TEXTURE_2D,
+	engine.gl.TEXTURE_2D,
+	require("./robot.png").default
+);
 character.renderable.renderables[0].uniforms["u_hasTexture"] = true;
 
-mushroom.animation.transitionTo('Walk', 0);
-mushroom.animation.states['Walk'].timeScale = 2;
+mushroom.animation.transitionTo("Walk", 0);
+mushroom.animation.states["Walk"].timeScale = 2;
+
+mushroom.addComponent((context) => {
+	if (context.engine.keyboardService.pressed(KeyboardKey.Space)) {
+		console.log("space pressed!");
+	}
+});
 
 engine.scene = scene;
 engine.start();

@@ -31,6 +31,14 @@ export class KeyboardService {
 		Space: false,
 	};
 
+	press: { [key in KeyboardKey]: boolean } = {
+		ArrowUp: false,
+		ArrowDown: false,
+		ArrowLeft: false,
+		ArrowRight: false,
+		Space: false,
+	};
+
 	constructor() {
 		document.body.addEventListener("keydown", (event) => {
 			if (isKeyboardKey(event.code)) {
@@ -40,8 +48,19 @@ export class KeyboardService {
 
 		document.body.addEventListener("keyup", (event) => {
 			if (isKeyboardKey(event.code)) {
+				this.press[event.code] = true;
 				this.down[event.code] = false;
 			}
 		});
+	}
+
+	clearPressState() {
+		Object.keys(this.press).forEach((key) => {
+			this.press[key as KeyboardKey] = false;
+		});
+	}
+
+	pressed(k: KeyboardKey) {
+		return this.press[k];
 	}
 }
