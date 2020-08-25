@@ -341,7 +341,7 @@ export function loadGLTF(
 
 		channels.forEach((channel) => {
 			const { sampler: samplerIndex = 0, target } = channel;
-			if (target.node) {
+			if (target.node !== undefined) {
 				const sampler = samplers[samplerIndex];
 				const targetNode = gltfNodes[target.node];
 				const targetPath = target.path;

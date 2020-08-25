@@ -1,16 +1,21 @@
-import { AnimationState } from "./AnimationState";
+import { AnimationState, AnimationWrapMode } from "./AnimationState";
 import { GameComponentContext } from "../interfaces";
 import { GameObject } from "../GameObject";
 
 export interface AnimationStateTransition {
 	to: string;
 	duration: number;
-	condition(
+	condition: (
 		context: GameComponentContext,
 		gameObject: GameObject,
 		playDuration: number,
 		totalDuration: number
-	): boolean;
+	) => boolean;
+}
+
+export interface AnimationConfiguration {
+	timeScale?: number;
+	wrap?: AnimationWrapMode;
 }
 
 export class AnimationStateMachine {
@@ -118,5 +123,19 @@ export class AnimationStateMachine {
 		}
 
 		return false;
+	}
+
+	configure(name: string, configuration: AnimationConfiguration) {
+		const state = this.getState(name);
+
+		if (state) {
+			if (configuration.timeScale !== undefined) {
+				state.timeScale = configuration.timeScale;
+			}
+
+			if (configuration.wrap !== undefined) {
+				state.wrapMode = configuration.wrap;
+			}
+		}
 	}
 }

@@ -4,8 +4,6 @@ import { vec3 } from "gl-matrix";
 import { loadGLB } from "../../../src/webgl/gltf";
 import { OrbitCamera } from "../../../src/cameras/OrbitCamera";
 import { AnimationWrapMode } from "../../../src/animation/AnimationState";
-import { createTexture, loadTextureFromSource } from "../../../src/webgl/utils";
-import { KeyboardKey } from "../../../src/services/KeyboardService";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -18,7 +16,7 @@ const engine = new Engine(canvas);
 const mushroom = loadGLB(
 	engine.gl,
 	engine.programs.standard,
-	require("./character.glb")
+	require("./bomb.glb")
 );
 
 const orbitCamera = new OrbitCamera();
@@ -50,43 +48,22 @@ frame();
 orbitCamera.radius = 5;
 orbitCamera.elevation = 5;
 orbitCamera.azimuth = (45 * Math.PI) / 180;
-orbitCamera.lookAt = vec3.fromValues(0, 2, 0);
+orbitCamera.lookAt = vec3.fromValues(0, 0, 0);
 
 const scene = new Scene();
 scene.camera = orbitCamera;
 scene.pointLights[0].position = vec3.fromValues(0, 5, 5);
 scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
 
-scene.loadSkymap(engine.gl, engine.programs.skybox, {
-	negativeX: require("./skybox1.jpg").default,
-	negativeY: require("./skybox2.jpg").default,
-	negativeZ: require("./skybox3.jpg").default,
-	positiveX: require("./skybox4.jpg").default,
-	positiveY: require("./skybox5.jpg").default,
-	positiveZ: require("./skybox6.jpg").default,
+mushroom.animation.configure('Spawn', {
+	wrap: AnimationWrapMode.None
 });
+
+mushroom.animation.initialState = "Spawn";
+
+console.log(mushroom.animation.states);
 
 scene.addGameObject(mushroom);
-const character = mushroom.getObjectById("characterMedium", true);
-const texture = createTexture(engine.gl);
-character.renderable.renderables[0].uniforms["u_texture0"] = texture;
-loadTextureFromSource(
-	engine.gl,
-	texture,
-	engine.gl.TEXTURE_2D,
-	engine.gl.TEXTURE_2D,
-	require("./robot.png").default
-);
-character.renderable.renderables[0].uniforms["u_hasTexture"] = true;
-
-mushroom.animation.transitionTo("Walk", 0);
-mushroom.animation.states["Walk"].timeScale = 2;
-
-mushroom.addComponent((context) => {
-	if (context.engine.keyboardService.pressed(KeyboardKey.Space)) {
-		console.log("space pressed!");
-	}
-});
 
 engine.scene = scene;
 engine.start();
