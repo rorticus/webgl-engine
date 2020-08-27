@@ -51,6 +51,10 @@ export class Skin {
 	}
 
 	update(gl: WebGLRenderingContext, node: GameObject) {
+		if (!node.worldMatrix) {
+			return;
+		}
+
 		const globalWorldInverse = mat4.create();
 		mat4.invert(globalWorldInverse, node.worldMatrix);
 

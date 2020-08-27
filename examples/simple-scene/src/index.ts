@@ -58,12 +58,20 @@ scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
 mushroom.animation.configure('Spawn', {
 	wrap: AnimationWrapMode.None
 });
+mushroom.animation.configure('Pulses', {
+	wrap: AnimationWrapMode.Loop
+});
 
 mushroom.animation.initialState = "Spawn";
+mushroom.id = "test";
+mushroom.animation.addTransition('Spawn', 'Pulses', (context, gameObject, playDuration, totalDuration) => {
+	return playDuration > totalDuration;
+});
 
-console.log(mushroom.animation.states);
-
-scene.addGameObject(mushroom);
+setTimeout(() => {
+	mushroom.scale = vec3.fromValues(0.5, 0.5, 0.5);
+	scene.addGameObject(mushroom);
+}, 1000);
 
 engine.scene = scene;
 engine.start();

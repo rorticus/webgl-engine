@@ -101,8 +101,12 @@ export class AnimationStateMachine {
 			this.state = this.nextState;
 			this.nextState = undefined;
 			this.states[this.state].reset();
+			this.update(context, gameObject);
 		} else {
-			this.initialState && this.transitionTo(this.initialState, 0);
+			if(this.initialState) {
+				this.transitionTo(this.initialState, 0);
+				this.update(context, gameObject);
+			}
 		}
 	}
 

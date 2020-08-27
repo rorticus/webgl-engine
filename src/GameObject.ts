@@ -25,7 +25,7 @@ export class GameObject {
 
 	// transformation as matrices
 	localMatrix: mat4;
-	worldMatrix: mat4;
+	worldMatrix?: mat4;
 
 	constructor() {
 		this.parent = null;
@@ -37,7 +37,7 @@ export class GameObject {
 		this.rotation = quat.create();
 		this.scale = vec3.fromValues(1, 1, 1);
 		this.localMatrix = mat4.create();
-		this.worldMatrix = mat4.create();
+		this.worldMatrix = undefined;
 
 		this.animation = new AnimationStateMachine();
 	}
@@ -95,20 +95,27 @@ export class GameObject {
 	}
 
 	localToWorld(vector: vec3) {
-		const v1 = vec3.create();
-		vec3.transformMat4(v1, vector, this.worldMatrix);
+		if (this.worldMatrix) {
+			const v1 = vec3.create();
+			vec3.transformMat4(v1, vector, this.worldMatrix);
+			return v1;
+		}
 
-		return v1;
+		return vector;
 	}
 
 	worldToLocal() {
 		const m1 = mat4.create();
 
 		return (vector: vec3) => {
-			mat4.invert(m1, this.worldMatrix);
-			const v1 = vec3.create();
-			vec3.transformMat4(v1, vector, m1);
-			return v1;
+			if (this.worldMatrix) {
+				mat4.invert(m1, this.worldMatrix);
+				const v1 = vec3.create();
+				vec3.transformMat4(v1, vector, m1);
+				return v1;
+			}
+
+			return vector;
 		};
 	}
 
@@ -177,28 +184,36 @@ export class GameObject {
 	computeWorldMatrix() {
 		this.updateMatrix();
 
+		if (!this.worldMatrix) {
+			this.worldMatrix = mat4.create();
+		}
+
 		if (!this.parent) {
 			mat4.copy(this.worldMatrix, this.localMatrix);
 		} else {
-			mat4.mul(this.worldMatrix, this.parent.worldMatrix, this.localMatrix);
+			mat4.mul(
+				this.worldMatrix,
+				this.parent.worldMatrix as mat4,
+				this.localMatrix
+			);
 		}
 
 		this.children.forEach((child) => child.computeWorldMatrix());
 	}
 
 	update(context: GameComponentContext) {
-		this.computeWorldMatrix();
 		this.components.forEach((component) => component.update(context, this));
+		this.animation.update(context, this);
+
+		this.computeWorldMatrix();
 
 		this.children.forEach((child) => child.update(context));
-
-		this.animation.update(context, this);
 	}
 
 	render(context: SceneRenderContext) {
 		const { gl, projectionMatrix, u_ambientColor, pointLights } = context;
 
-		if (this.renderable) {
+		if (this.renderable && this.worldMatrix) {
 			const worldInverseMatrix = mat4.create();
 			mat4.invert(worldInverseMatrix, this.worldMatrix);
 			mat4.transpose(worldInverseMatrix, worldInverseMatrix);
