@@ -13,7 +13,7 @@ import { quad } from "./webgl/primitives";
 import { GameComponentContext } from "./interfaces";
 
 export class Scene {
-	private _layers: GameObject[][] = [[]];
+	private _layers: GameObject[] = [];
 
 	ambientColor = vec3.fromValues(0.1, 0.1, 0.1);
 	pointLights: Light[];
@@ -66,39 +66,28 @@ export class Scene {
 	}
 
 	update(context: GameComponentContext) {
-		this._layers.forEach((layer) =>
-			layer.forEach((gameObject) => gameObject.update(context))
-		);
+		this._layers.forEach((layer) => layer.update(context));
 	}
 
 	addGameObject(go: GameObject, layer = 0) {
 		if (this._layers[layer] === undefined) {
-			this._layers[layer] = [];
+			this._layers[layer] = new GameObject();
 		}
 
-		this._layers[layer].push(go);
+		this._layers[layer].add(go);
 	}
 
 	removeGameObject(go: GameObject) {
 		this._layers.forEach((layer) => {
-			const index = layer.indexOf(go);
-
-			if (index >= 0) {
-				layer.splice(index, 1);
-			}
+			layer.remove(go);
 		});
 	}
 
 	getObjectById(id: string) {
 		for (let i = 0; i < this._layers.length; i++) {
-			for (let j = 0; j < this._layers[i].length; j++) {
-				const go =
-					this._layers[i][j].id === id
-						? this._layers[i][j]
-						: this._layers[i][j].getObjectById(id, true);
-				if (go) {
-					return go;
-				}
+			const go = this._layers[i].getObjectById(id, true);
+			if (go) {
+				return go;
 			}
 		}
 
@@ -124,9 +113,7 @@ export class Scene {
 
 			gl.enable(gl.BLEND);
 			gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-			layer.forEach((gameObject) => {
-				gameObject.render(renderContext);
-			});
+			layer.render(renderContext);
 
 			if (index === 0) {
 				if (this.skybox) {

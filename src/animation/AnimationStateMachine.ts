@@ -16,6 +16,8 @@ export interface AnimationStateTransition {
 export interface AnimationConfiguration {
 	timeScale?: number;
 	wrap?: AnimationWrapMode;
+	onEnter?: () => void;
+	onExit?: () => void;
 }
 
 export class AnimationStateMachine {
@@ -86,7 +88,7 @@ export class AnimationStateMachine {
 								transitions[i].condition(
 									context,
 									gameObject,
-									currentState.time,
+									currentState.totalTime,
 									currentState.duration
 								)
 							) {
@@ -101,9 +103,10 @@ export class AnimationStateMachine {
 			this.state = this.nextState;
 			this.nextState = undefined;
 			this.states[this.state].reset();
+
 			this.update(context, gameObject);
 		} else {
-			if(this.initialState) {
+			if (this.initialState) {
 				this.transitionTo(this.initialState, 0);
 				this.update(context, gameObject);
 			}
@@ -111,6 +114,9 @@ export class AnimationStateMachine {
 	}
 
 	transitionTo(state: string, duration: number) {
+		this.state && this.states[this.state]?.onExit?.();
+		this.states[state].onEnter?.();
+
 		this.nextState = state;
 		this.states[state].reset();
 		this.transitionDuration = duration;
@@ -139,6 +145,14 @@ export class AnimationStateMachine {
 
 			if (configuration.wrap !== undefined) {
 				state.wrapMode = configuration.wrap;
+			}
+
+			if (configuration.onEnter) {
+				state.onEnter = configuration.onEnter;
+			}
+
+			if (configuration.onExit) {
+				state.onExit = configuration.onExit;
 			}
 		}
 	}

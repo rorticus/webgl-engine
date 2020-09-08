@@ -9,17 +9,22 @@ export enum AnimationWrapMode {
 
 export class AnimationState {
 	time: number = 0;
+	totalTime: number = 0;
 	channels: AnimationChannel[] = [];
 	wrapMode: AnimationWrapMode = AnimationWrapMode.None;
 	duration: number = 0;
 	timeScale = 1;
+	onEnter?: () => void;
+	onExit?: () => void;
 
 	reset() {
 		this.time = 0;
+		this.totalTime = 0;
 	}
 
 	update(context: GameComponentContext, weight = 1) {
 		this.time += context.deltaInSeconds * this.timeScale;
+		this.totalTime += context.deltaInSeconds;
 
 		if (this.duration === 0) {
 			this.duration =

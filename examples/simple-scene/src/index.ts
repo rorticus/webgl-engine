@@ -3,7 +3,10 @@ import { Scene } from "../../../src/Scene";
 import { vec3 } from "gl-matrix";
 import { loadGLB } from "../../../src/webgl/gltf";
 import { OrbitCamera } from "../../../src/cameras/OrbitCamera";
-import { AnimationWrapMode } from "../../../src/animation/AnimationState";
+import {
+	AnimationState,
+	AnimationWrapMode,
+} from "../../../src/animation/AnimationState";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -55,18 +58,44 @@ scene.camera = orbitCamera;
 scene.pointLights[0].position = vec3.fromValues(0, 5, 5);
 scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
 
-mushroom.animation.configure('Spawn', {
-	wrap: AnimationWrapMode.None
+mushroom.animation.configure("Spawn", {
+	wrap: AnimationWrapMode.None,
+	onEnter: () => {
+		console.log("spawning!");
+	},
+	onExit: () => {
+		console.log("Leaving :(");
+	},
 });
-mushroom.animation.configure('Pulses', {
-	wrap: AnimationWrapMode.Loop
+mushroom.animation.configure("Pulses", {
+	wrap: AnimationWrapMode.Loop,
 });
+
+mushroom.animation.registerState("idleState", new AnimationState());
+mushroom.animation.configure("idleState", {
+	onEnter() {
+		console.log('remvoing?');
+		mushroom.removeFromParent();
+	},
+});
+
+mushroom.animation.addTransition(
+	"Pulses",
+	"idleState",
+	(context, gameObject, playDuration) => {
+		return playDuration > 3;
+	}
+);
 
 mushroom.animation.initialState = "Spawn";
 mushroom.id = "test";
-mushroom.animation.addTransition('Spawn', 'Pulses', (context, gameObject, playDuration, totalDuration) => {
-	return playDuration > totalDuration;
-});
+mushroom.animation.addTransition(
+	"Spawn",
+	"Pulses",
+	(context, gameObject, playDuration, totalDuration) => {
+		return playDuration > totalDuration;
+	}
+);
 
 setTimeout(() => {
 	mushroom.scale = vec3.fromValues(0.5, 0.5, 0.5);
