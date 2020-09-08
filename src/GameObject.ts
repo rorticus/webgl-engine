@@ -141,6 +141,10 @@ export class GameObject {
 		}
 	}
 
+	removeFromParent() {
+		this.parent?.remove(this);
+	}
+
 	traverse(callback: (o: GameObject) => void) {
 		callback(this);
 		this.children.forEach(callback);
