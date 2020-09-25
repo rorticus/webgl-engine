@@ -1,12 +1,12 @@
 import { Engine } from "../../../src/Engine";
 import { Scene } from "../../../src/Scene";
 import { vec3 } from "gl-matrix";
-import { loadGLB } from "../../../src/webgl/gltf";
 import { OrbitCamera } from "../../../src/cameras/OrbitCamera";
-import {
-	AnimationState,
-	AnimationWrapMode,
-} from "../../../src/animation/AnimationState";
+import { GameObject } from "../../../src/GameObject";
+import { createAttributesFromArrays } from "../../../src/webgl/utils";
+import { loadGLB } from "../../../src/webgl/gltf";
+import { AnimationState } from "../../../src/animation/AnimationState";
+import { TranslationAnimationChannel } from "../../../src/animation/TranslationAnimationChannel";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -15,12 +15,6 @@ canvas.setAttribute("height", "512");
 document.body.appendChild(canvas);
 
 const engine = new Engine(canvas);
-
-const mushroom = loadGLB(
-	engine.gl,
-	engine.programs.standard,
-	require("./bomb.glb")
-);
 
 const orbitCamera = new OrbitCamera();
 
@@ -55,52 +49,60 @@ orbitCamera.lookAt = vec3.fromValues(0, 0, 0);
 
 const scene = new Scene();
 scene.camera = orbitCamera;
-scene.pointLights[0].position = vec3.fromValues(0, 5, 5);
+scene.pointLights[0].position = vec3.fromValues(0, 5, 0);
 scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
 
-mushroom.animation.configure("Spawn", {
-	wrap: AnimationWrapMode.None,
-	onEnter: () => {
-		console.log("spawning!");
-	},
-	onExit: () => {
-		console.log("Leaving :(");
-	},
-});
-mushroom.animation.configure("Pulses", {
-	wrap: AnimationWrapMode.Loop,
-});
+function createExplosion(
+	north: number,
+	east: number,
+	south: number,
+	west: number
+) {
+	const vertices = [
+		-0.5,
+		0,
+		-0.5, // nw
+		0.5,
+		0,
+		-0.5, // ne
+		0.5,
+		0,
+		0.5, // se
+		-0.5,
+		0,
+		0.5, // sw
+	];
+	const indices = [0, 1, 2, 2, 3, 0];
 
-mushroom.animation.registerState("idleState", new AnimationState());
-mushroom.animation.configure("idleState", {
-	onEnter() {
-		console.log('remvoing?');
-		mushroom.removeFromParent();
-	},
-});
-
-mushroom.animation.addTransition(
-	"Pulses",
-	"idleState",
-	(context, gameObject, playDuration) => {
-		return playDuration > 3;
+	if (north) {
+		vertices.push(-0.5, 0, -0.5 - north);
+		vertices.push(0.5, 0, -0.5 - north);
+		indices.push(vertices.length - 2, vertices.length - 1, vertices[1]);
+		indices.push(vertices[1], vertices[0], vertices.length - 2);
 	}
-);
 
-mushroom.animation.initialState = "Spawn";
-mushroom.id = "test";
-mushroom.animation.addTransition(
-	"Spawn",
-	"Pulses",
-	(context, gameObject, playDuration, totalDuration) => {
-		return playDuration > totalDuration;
-	}
-);
+	return createAttributesFromArrays(engine.gl, {
+		position: {
+			numComponents: 3,
+			data: vertices,
+		},
+		indices: {
+			numComponents: 3,
+			data: indices,
+		},
+	});
+}
 
-setTimeout(() => {
-	mushroom.scale = vec3.fromValues(0.5, 0.5, 0.5);
-	scene.addGameObject(mushroom);
-}, 1000);
+const model = loadGLB(engine.gl, engine.programs.standard, require('./explosion.glb'));
+const bigger = new AnimationState();
+bigger.channels.push(new TranslationAnimationChannel(model.getObjectById('Bone.001', true), [0, 5], [
+  vec3.fromValues(0, 1, 0),
+  vec3.fromValues(0, 2, 0)
+]));
+model.animation.registerState('Bigger', bigger);
+model.animation.initialState = 'Bigger';
+
+scene.addGameObject(model);
 
 engine.scene = scene;
 engine.start();
