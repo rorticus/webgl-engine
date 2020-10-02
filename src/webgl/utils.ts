@@ -675,3 +675,35 @@ export function positionSpriteOnCanvas(
 	);
 	gameObject.scale = vec3.fromValues(trueWidth, trueHeight, 1);
 }
+
+export function updateSpriteFromSource(
+	engine: Engine,
+	sprite: GameObject,
+	source: string | HTMLCanvasElement
+) {
+	// get the texture
+	const texture = sprite.renderable?.renderables[0]?.uniforms.u_texture;
+
+	if (texture) {
+		engine.gl.bindTexture(engine.gl.TEXTURE_2D, texture);
+
+		if (typeof source === "string") {
+			loadTextureFromSource(
+				engine.gl,
+				texture,
+				engine.gl.TEXTURE_2D,
+				engine.gl.TEXTURE_2D,
+				source
+			);
+		} else {
+			engine.gl.texImage2D(
+				engine.gl.TEXTURE_2D,
+				0,
+				engine.gl.RGBA,
+				engine.gl.RGBA,
+				engine.gl.UNSIGNED_BYTE,
+				source
+			);
+		}
+	}
+}
