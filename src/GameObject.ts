@@ -5,6 +5,7 @@ import {
 	GameComponent,
 	GameComponentContext,
 	SceneRenderContext,
+	RenderPhase,
 } from "./interfaces";
 import { Engine } from "./Engine";
 import { AnimationStateMachine } from "./animation/AnimationStateMachine";
@@ -17,6 +18,7 @@ export class GameObject {
 	components: GameComponent[];
 	renderable?: Renderable;
 	animation: AnimationStateMachine;
+	renderPhase: RenderPhase = "standard";
 
 	// transformation
 	position: vec3;
@@ -216,6 +218,11 @@ export class GameObject {
 
 	render(context: SceneRenderContext) {
 		const { gl, projectionMatrix, u_ambientColor, pointLights } = context;
+
+		if (context.phase !== this.renderPhase) {
+			context.addToRenderPhase(this.renderPhase, this);
+			return;
+		}
 
 		if (this.renderable && this.worldMatrix) {
 			const worldInverseMatrix = mat4.create();

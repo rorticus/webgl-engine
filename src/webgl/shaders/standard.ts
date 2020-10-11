@@ -58,6 +58,8 @@ void main() {
   }  
 }`;
 
+// blend mode 0 = opaque
+// blend mode 1 = blend
 export const fragmentShader = `
 precision mediump float;
 
@@ -65,6 +67,7 @@ uniform vec3 u_color;
 uniform vec3 u_ambientColor;
 uniform sampler2D u_texture0;
 uniform bool u_hasTexture;
+uniform int u_blendMode;
 
 const int NUM_POSITIONAL_LIGHTS = 2;
 
@@ -78,19 +81,22 @@ vec3 calculateAmbientColor(void) {
 	return u_ambientColor;
 }
 
-vec3 calculatePositionalLights(vec3 normal) {
-	vec3 diffuse = vec3(0.0, 0.0, 0.0);
+vec4 calculatePositionalLights(vec3 normal) {
+	vec4 diffuse = vec4(0.0, 0.0, 0.0, 0.0);
 	
 	for(int i = 0; i < NUM_POSITIONAL_LIGHTS; i++) {
 		vec3 lightDirection = normalize(v_surfaceToLight[i]);
 		float light = max(dot(normal, -lightDirection), 0.0);
 		
 		if(u_hasTexture) {
-			diffuse += u_lightWorldColor[i] * texture2D(u_texture0, v_texcoord0).xyz * light;
+      if(u_blendMode == 0) {
+        diffuse += vec4(u_lightWorldColor[i], 1) * vec4(texture2D(u_texture0, v_texcoord0).xyz, 1.0) * light;
+      } else if (u_blendMode == 1) {
+        diffuse += vec4(u_lightWorldColor[i], 1) * texture2D(u_texture0, v_texcoord0) * light;
+      }
 		} else {
-			diffuse += u_lightWorldColor[i] * u_color * light;
-		}				
-		
+			diffuse += vec4(u_lightWorldColor[i] * u_color * light, 1.0);
+		}
 	}
 	
 	return diffuse;
@@ -98,11 +104,9 @@ vec3 calculatePositionalLights(vec3 normal) {
 
 void main() {
 	vec3 normal = normalize(v_normal);
-	
-	vec3 iSpecular = vec3(0.0, 0.0, 0.0);
 		
-	vec3 iColor = calculateAmbientColor() + calculatePositionalLights(normal) + iSpecular;
+	vec4 iColor = vec4(calculateAmbientColor(), 0.0) + calculatePositionalLights(normal);
 				
-  	gl_FragColor = vec4(iColor, 1.0);
+  gl_FragColor = iColor;
 }
 `;

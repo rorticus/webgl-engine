@@ -66,7 +66,7 @@ export interface GltfMaterial {
 	occlusionTexture?: any;
 	emissiveTexture?: any;
 	emissiveFactor?: [number, number, number];
-	alphaMode?: string;
+	alphaMode?: "BLEND" | "OPAQUE" | "MASK";
 	alphaCutoff?: number;
 	doubleSided?: boolean;
 	pbrMetallicRoughness?: {
@@ -291,6 +291,12 @@ export function loadGLTF(
 								  },
 					})),
 				};
+
+				n.renderPhase = n.renderable.renderables.some(
+					(renderable) => renderable.uniforms.u_blendMode === 1
+				)
+					? "alpha"
+					: "standard";
 			}
 		}
 
@@ -477,7 +483,7 @@ export function materialToUniforms(
 	material: GltfMaterial,
 	bufferViews: GlBufferView[]
 ) {
-	const { pbrMetallicRoughness } = material;
+	const { pbrMetallicRoughness, alphaMode = "OPAQUE" } = material;
 
 	if (pbrMetallicRoughness) {
 		const {
@@ -511,6 +517,7 @@ export function materialToUniforms(
 						u_color: [1, 1, 1],
 						[`u_texture${baseColorTexture.texCoord || 0}`]: texture,
 						u_hasTexture: true,
+						u_blendMode: alphaMode === "OPAQUE" ? 0 : 1,
 					};
 				} else if (gltfImage.bufferView) {
 					const bufferView = bufferViews[gltfImage.bufferView];
@@ -542,6 +549,7 @@ export function materialToUniforms(
 						u_color: [1, 1, 1],
 						[`u_texture${baseColorTexture.texCoord}`]: texture,
 						u_hasTexture: true,
+						u_blendMode: alphaMode === "OPAQUE" ? 0 : 1,
 					};
 				}
 			}
@@ -550,12 +558,14 @@ export function materialToUniforms(
 		return {
 			u_color: [baseColorFactor[0], baseColorFactor[1], baseColorFactor[2]],
 			u_hasTexture: false,
+			u_blendMode: alphaMode === "OPAQUE" ? 0 : 1,
 		};
 	}
 
 	return {
 		u_color: [1, 1, 1, 1],
 		u_hasTexture: false,
+		u_blendMode: alphaMode === "OPAQUE" ? 0 : 1,
 	};
 }
 

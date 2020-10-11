@@ -2,7 +2,12 @@ import { GameObject } from "./GameObject";
 import { mat4, vec3, vec4 } from "gl-matrix";
 import { Camera } from "./Camera";
 import { Light, LightType } from "./Light";
-import { PrimitiveData, ProgramInfo, Renderable } from "./webgl/interfaces";
+import {
+	PrimitiveData,
+	ProgramInfo,
+	Renderable,
+	SingleRenderable,
+} from "./webgl/interfaces";
 import {
 	createAttributesFromArrays,
 	createSkyboxTexture,
@@ -10,7 +15,7 @@ import {
 	setUniforms,
 } from "./webgl/utils";
 import { quad } from "./webgl/primitives";
-import { GameComponentContext } from "./interfaces";
+import { GameComponentContext, RenderPhase } from "./interfaces";
 
 export class Scene {
 	private _layers: GameObject[] = [];
@@ -106,14 +111,24 @@ export class Scene {
 			projectionMatrix: this.camera.viewProjectionMatrix,
 			u_ambientColor: this.ambientColor,
 			pointLights: this.pointLights,
+			phase: "standard" as const,
 		};
 
 		this._layers.forEach((layer, index) => {
 			gl.clear(gl.DEPTH_BUFFER_BIT);
 
+			const additionalPhases: Record<RenderPhase, GameObject[]> = {
+				alpha: [],
+				standard: [],
+			};
+
 			gl.enable(gl.BLEND);
 			gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-			layer.render(renderContext);
+			layer.render({
+				...renderContext,
+				addToRenderPhase: (phase: RenderPhase, go: GameObject) =>
+					additionalPhases[phase].push(go),
+			});
 
 			if (index === 0) {
 				if (this.skybox) {
@@ -140,6 +155,22 @@ export class Scene {
 					);
 					gl.depthFunc(gl.LESS);
 				}
+			}
+
+			if (additionalPhases.alpha.length) {
+				gl.depthMask(false);
+				gl.blendFunc(gl.ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+				additionalPhases.alpha.forEach((go) => {
+					go.render({
+						...renderContext,
+						phase: "alpha" as const,
+						addToRenderPhase: () => undefined,
+					});
+				});
+
+				gl.depthMask(true);
+				gl.blendFunc(gl.ONE, gl.ZERO);
 			}
 		});
 	}

@@ -61,7 +61,9 @@ export class Engine {
 
 		for (let i = 0; i < names.length; i++) {
 			try {
-				gl = canvas.getContext(names[i]) as WebGLRenderingContext;
+				gl = canvas.getContext(names[i], {
+					premultipliedAlpha: false
+				}) as WebGLRenderingContext;
 				break;
 			} catch (e) {}
 		}
