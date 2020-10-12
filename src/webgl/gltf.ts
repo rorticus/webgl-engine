@@ -514,7 +514,7 @@ export function materialToUniforms(
 					image.src = gltfImage.uri;
 
 					return {
-						u_color: [1, 1, 1],
+						u_color: [1, 1, 1, 1],
 						[`u_texture${baseColorTexture.texCoord || 0}`]: texture,
 						u_hasTexture: true,
 						u_blendMode: alphaMode === "OPAQUE" ? 0 : 1,
@@ -546,7 +546,7 @@ export function materialToUniforms(
 					)}`;
 
 					return {
-						u_color: [1, 1, 1],
+						u_color: [1, 1, 1, 1],
 						[`u_texture${baseColorTexture.texCoord}`]: texture,
 						u_hasTexture: true,
 						u_blendMode: alphaMode === "OPAQUE" ? 0 : 1,
@@ -556,7 +556,7 @@ export function materialToUniforms(
 		}
 
 		return {
-			u_color: [baseColorFactor[0], baseColorFactor[1], baseColorFactor[2]],
+			u_color: [baseColorFactor[0], baseColorFactor[1], baseColorFactor[2], baseColorFactor[3]],
 			u_hasTexture: false,
 			u_blendMode: alphaMode === "OPAQUE" ? 0 : 1,
 		};

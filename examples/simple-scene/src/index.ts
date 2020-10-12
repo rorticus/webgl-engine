@@ -52,6 +52,9 @@ scene.camera = orbitCamera;
 scene.pointLights[0].position = vec3.fromValues(2, 2, 0);
 scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
 
+scene.pointLights[1].position = vec3.fromValues(0, 1, -2);
+scene.pointLights[1].color = vec3.fromValues(1, 1, 1);
+
 const model = loadGLB(engine.gl, engine.programs.standard, require('./transparency.glb'));
 
 scene.addGameObject(model);

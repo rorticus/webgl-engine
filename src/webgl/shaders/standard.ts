@@ -63,7 +63,7 @@ void main() {
 export const fragmentShader = `
 precision mediump float;
 
-uniform vec3 u_color;
+uniform vec4 u_color;
 uniform vec3 u_ambientColor;
 uniform sampler2D u_texture0;
 uniform bool u_hasTexture;
@@ -95,7 +95,11 @@ vec4 calculatePositionalLights(vec3 normal) {
         diffuse += vec4(u_lightWorldColor[i], 1) * texture2D(u_texture0, v_texcoord0) * light;
       }
 		} else {
-			diffuse += vec4(u_lightWorldColor[i] * u_color * light, 1.0);
+      if(u_blendMode == 0) {
+        diffuse += vec4((vec4(u_lightWorldColor[i], 1.0) * u_color * light).xyz, 1);
+      } else {
+        diffuse += vec4(u_lightWorldColor[i], 1) * u_color * light;
+      }
 		}
 	}
 	

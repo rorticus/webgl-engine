@@ -159,7 +159,7 @@ export class Scene {
 
 			if (additionalPhases.alpha.length) {
 				gl.depthMask(false);
-				gl.blendFunc(gl.ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+				gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
 				additionalPhases.alpha.forEach((go) => {
 					go.render({
