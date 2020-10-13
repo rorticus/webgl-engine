@@ -82,8 +82,8 @@ vec3 calculateAmbientColor(void) {
 }
 
 vec4 calculatePositionalLights(vec3 normal) {
-	vec4 diffuse = vec4(0.0, 0.0, 0.0, 0.0);
-	
+  vec4 diffuse = vec4(0.0, 0.0, 0.0, 0.0);
+  	
 	for(int i = 0; i < NUM_POSITIONAL_LIGHTS; i++) {
 		vec3 lightDirection = normalize(v_surfaceToLight[i]);
 		float light = max(dot(normal, -lightDirection), 0.0);
