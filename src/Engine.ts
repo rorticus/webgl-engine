@@ -18,12 +18,19 @@ import {
 	vertexShader as spriteVertexShader,
 	fragmentShader as spriteFragmentShader,
 } from "./webgl/shaders/sprite";
+
+import {
+	vertexShader as particlesVertexShader,
+	fragmentShader as particlesFragmentShader,
+} from "./webgl/shaders/particles";
+
 import { KeyboardService } from "./services/KeyboardService";
 
 interface Programs {
 	standard: ProgramInfo;
 	skybox: ProgramInfo;
 	sprite: ProgramInfo;
+	particle: ProgramInfo;
 }
 
 export class Engine {
@@ -83,6 +90,7 @@ export class Engine {
 			standard: createProgram(gl, standardVertexShader, standardFragmentShader),
 			skybox: createProgram(gl, skyboxVertexShader, skyboxFragmentShader),
 			sprite: createProgram(gl, spriteVertexShader, spriteFragmentShader),
+			particle: createProgram(gl, particlesVertexShader, particlesFragmentShader)
 		};
 
 		this._gl = gl;

@@ -7,6 +7,7 @@ import { createAttributesFromArrays } from "../../../src/webgl/utils";
 import { loadGLB } from "../../../src/webgl/gltf";
 import { AnimationState } from "../../../src/animation/AnimationState";
 import { TranslationAnimationChannel } from "../../../src/animation/TranslationAnimationChannel";
+import { ParticleEmitter } from '../../../src/ParticleEmitter';
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -55,9 +56,20 @@ scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
 scene.pointLights[1].position = vec3.fromValues(0, 1, -2);
 scene.pointLights[1].color = vec3.fromValues(1, 1, 1);
 
-const model = loadGLB(engine.gl, engine.programs.standard, require('./transparency.glb'));
+const emitter = new ParticleEmitter(engine.programs.particle);
 
-scene.addGameObject(model);
+emitter.particles.push({
+	position: vec3.fromValues(0, 0, 0),
+	size: 0.25
+});
+
+emitter.particles.push({
+	position: vec3.fromValues(1, 0, 0),
+	size: 0.25
+});
+
+
+scene.addGameObject(emitter);
 
 engine.scene = scene;
 engine.start();
