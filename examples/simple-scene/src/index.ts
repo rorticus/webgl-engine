@@ -58,17 +58,6 @@ scene.pointLights[1].color = vec3.fromValues(1, 1, 1);
 
 const emitter = new ParticleEmitter(engine.programs.particle);
 
-emitter.particles.push({
-	position: vec3.fromValues(0, 0, 0),
-	size: 0.25
-});
-
-emitter.particles.push({
-	position: vec3.fromValues(1, 0, 0),
-	size: 0.25
-});
-
-
 scene.addGameObject(emitter);
 
 engine.scene = scene;

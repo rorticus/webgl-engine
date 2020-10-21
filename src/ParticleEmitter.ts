@@ -1,87 +1,187 @@
-import { vec3 } from "gl-matrix";
+import { vec3, vec4 } from "gl-matrix";
 import { projection } from "gl-matrix/src/gl-matrix/mat3";
 import { GameObject } from "./GameObject";
-import { SceneRenderContext } from "./interfaces";
-import { GlAccessorType, ProgramInfo } from "./webgl/interfaces";
-import { createBufferFromTypedArray, numberOfComponentsForType, setBuffersAndAttributes, setUniforms } from "./webgl/utils";
+import { GameComponentContext, SceneRenderContext } from "./interfaces";
+import {
+	GlAccessorType,
+	GlBufferAndView,
+	ProgramInfo,
+} from "./webgl/interfaces";
+import {
+	createBufferFromTypedArray,
+	numberOfComponentsForType,
+	setBuffersAndAttributes,
+	setUniforms,
+	updateBuffer,
+} from "./webgl/utils";
 
 export interface Particle {
-    position: vec3;
-    size: number;
+	position: vec3;
+	size: number;
+	color: vec4;
+	life: number;
+	lifeElapsed: number;
+	velocity: vec3;
+}
+
+function randBetween(a: number, b: number) {
+	return a + Math.random() * (b - a);
 }
 
 export class ParticleEmitter extends GameObject {
-    particles: Particle[] = [];
-    particleProgramInfo: ProgramInfo;
+	particles: Particle[] = [];
+	particleProgramInfo: ProgramInfo;
 
-    constructor(programInfo: ProgramInfo) {
-        super();
-        this.particleProgramInfo = programInfo;
-    }
+	private _particlesPerSecond = 50;
+	private _particleLifeMin = 0.5;
+	private _particleLifeMax = 2;
+	private _particleSizeMin = 0.1;
+	private _particleSizeMax = 0.2;
+	private _gravity = vec3.fromValues(0, -1, 0);
 
-    render(context: SceneRenderContext) {
-        const gl = context.gl;
+	private _positionArray!: Float32Array;
+	private _sizeArray!: Float32Array;
+	private _colorArray!: Float32Array;
 
-        gl.useProgram(this.particleProgramInfo.program);
+	private _positionBuffer: WebGLBuffer | undefined;
+	private _sizeBuffer: WebGLBuffer | undefined;
+	private _colorBuffer: WebGLBuffer | undefined;
 
-        const viewport = gl.getParameter(gl.VIEWPORT);
-        const fovy = 60;
-        const heightOfNearPlane = Math.abs(viewport[3] - viewport[1]) / (2 * Math.tan(0.5 * fovy * Math.PI / 180.0));
+	private _particleTimer = 0;
 
-        setUniforms(this.particleProgramInfo, {
-            u_projectionMatrix: context.projectionMatrix,
-            u_matrix: this.worldMatrix,
-            u_heightOfNearPlane: heightOfNearPlane
-        });
+	constructor(programInfo: ProgramInfo) {
+		super();
+		this.particleProgramInfo = programInfo;
 
-        const positionArray = new Float32Array(this.particles.length * 3);
-        const sizeArray = new Float32Array(this.particles.length);
+		this.generateBuffers();
+	}
 
-        for(let i = 0; i < this.particles.length; i++) {
-            positionArray[i * 3 + 0] = this.particles[i].position[0];
-            positionArray[i * 3 + 1] = this.particles[i].position[1];
-            positionArray[i * 3 + 2] = this.particles[i].position[2];
+	private generateBuffers() {
+		const maxParticles = this._particleLifeMax * this._particlesPerSecond;
 
-            sizeArray[i] = this.particles[i].size;
-        }
+		this._positionArray = new Float32Array(maxParticles * 3);
+		this._sizeArray = new Float32Array(maxParticles);
+		this._colorArray = new Float32Array(maxParticles * 4);
+	}
 
-        setBuffersAndAttributes(gl, this.particleProgramInfo, {
-            attribs: {
-                a_position: {
-                    buffer: createBufferFromTypedArray(
-                        gl,
-                        positionArray
-                    ),
-                    numItems: this.particles.length,
-                    itemSize: numberOfComponentsForType(GlAccessorType.VEC3),
-                    type: gl.STATIC_DRAW,
-                    normalize: false,
-                    stride: 0,
-                    offset: 0,
-                    componentType: gl.FLOAT
-                },
-                a_size: {
-                    buffer: createBufferFromTypedArray(
-                        gl,
-                        sizeArray
-                    ),
-                    numItems: this.particles.length,
-                    itemSize: numberOfComponentsForType(GlAccessorType.SCALAR),
-                    type: gl.STATIC_DRAW,
-                    normalize: false,
-                    stride: 0,
-                    offset: 0,
-                    componentType: gl.FLOAT
-                }
-            }
-        });
+	render(context: SceneRenderContext) {
+		const gl = context.gl;
 
-        gl.drawArrays(
-            gl.POINTS,
-            0,
-            this.particles.length
-        );
-    }
+		if (!this._positionBuffer || !this._sizeBuffer || !this._colorBuffer) {
+			this._positionBuffer = createBufferFromTypedArray(
+				gl,
+				new Float32Array(0)
+			);
+			this._sizeBuffer = createBufferFromTypedArray(gl, new Float32Array(0));
+			this._colorBuffer = createBufferFromTypedArray(gl, new Float32Array(0));
+		}
+
+		gl.useProgram(this.particleProgramInfo.program);
+
+		const viewport = gl.getParameter(gl.VIEWPORT);
+		const fovy = 60;
+		const heightOfNearPlane =
+			Math.abs(viewport[3] - viewport[1]) /
+			(2 * Math.tan((0.5 * fovy * Math.PI) / 180.0));
+
+		setUniforms(this.particleProgramInfo, {
+			u_projectionMatrix: context.projectionMatrix,
+			u_matrix: this.worldMatrix,
+			u_heightOfNearPlane: heightOfNearPlane,
+		});
+
+		for (let i = 0; i < this.particles.length; i++) {
+			this._positionArray[i * 3 + 0] = this.particles[i].position[0];
+			this._positionArray[i * 3 + 1] = this.particles[i].position[1];
+			this._positionArray[i * 3 + 2] = this.particles[i].position[2];
+
+			this._sizeArray[i] = this.particles[i].size;
+
+			this._colorArray[i * 4 + 0] = this.particles[i].color[0];
+			this._colorArray[i * 4 + 1] = this.particles[i].color[1];
+			this._colorArray[i * 4 + 2] = this.particles[i].color[2];
+			this._colorArray[i * 4 + 3] = this.particles[i].color[3];
+		}
+
+		updateBuffer(gl, this._positionBuffer, this._positionArray);
+		updateBuffer(gl, this._sizeBuffer, this._sizeArray);
+		updateBuffer(gl, this._colorBuffer, this._colorArray);
+
+		setBuffersAndAttributes(gl, this.particleProgramInfo, {
+			attribs: {
+				a_position: {
+					buffer: this._positionBuffer,
+					numItems: this.particles.length,
+					itemSize: numberOfComponentsForType(GlAccessorType.VEC3),
+					type: gl.STATIC_DRAW,
+					normalize: false,
+					stride: 0,
+					offset: 0,
+					componentType: gl.FLOAT,
+				},
+				a_size: {
+					buffer: this._sizeBuffer,
+					numItems: this.particles.length,
+					itemSize: numberOfComponentsForType(GlAccessorType.SCALAR),
+					type: gl.STATIC_DRAW,
+					normalize: false,
+					stride: 0,
+					offset: 0,
+					componentType: gl.FLOAT,
+				},
+				a_color: {
+					buffer: this._colorBuffer,
+					numItems: this.particles.length,
+					itemSize: numberOfComponentsForType(GlAccessorType.VEC4),
+					type: gl.STATIC_DRAW,
+					normalize: false,
+					stride: 0,
+					offset: 0,
+					componentType: gl.FLOAT,
+				},
+			},
+		});
+
+		gl.drawArrays(gl.POINTS, 0, this.particles.length);
+	}
+
+	update(context: GameComponentContext) {
+		super.update(context);
+
+		const perSec = 1 / this._particlesPerSecond;
+
+		this._particleTimer += context.deltaInSeconds;
+		while (this._particleTimer > perSec) {
+			this._particleTimer -= perSec;
+
+			this.particles.push({
+				position: vec3.fromValues(0, 0, 0),
+				size: randBetween(this._particleSizeMin, this._particleSizeMax),
+				life: randBetween(this._particleLifeMin, this._particleLifeMax),
+				color: vec4.fromValues(1, 1, 1, 1),
+				lifeElapsed: 0,
+				velocity: vec3.fromValues(randBetween(-1, 1), 1, 0),
+			});
+		}
+
+        const deletion: Particle[] = [];
+        
+        const delta = vec3.create();
+
+		this.particles.forEach((particle) => {
+            vec3.scale(delta, particle.velocity, context.deltaInSeconds);
+			vec3.add(particle.position, particle.position, delta);
+			particle.lifeElapsed += context.deltaInSeconds;
+
+			if (particle.lifeElapsed >= particle.life) {
+				deletion.push(particle);
+			}
+		});
+
+		deletion.forEach((p) =>
+			this.particles.splice(this.particles.indexOf(p), 1)
+		);
+	}
 }
 
 export default ParticleEmitter;

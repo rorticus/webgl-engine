@@ -308,6 +308,16 @@ export function createBufferFromTypedArray(
 	return buffer;
 }
 
+export function updateBuffer(
+	gl: WebGLRenderingContext,
+	buffer: WebGLBuffer,
+	typedArray: NativeArray,
+	type: number = gl.ARRAY_BUFFER
+) {
+	gl.bindBuffer(type, buffer);
+	gl.bufferData(type, typedArray, gl.DYNAMIC_DRAW);
+}
+
 export function createTexture(gl: WebGLRenderingContext, type = gl.TEXTURE_2D) {
 	const texture = gl.createTexture();
 	gl.bindTexture(type, texture);
