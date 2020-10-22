@@ -1,12 +1,7 @@
 import { vec3, vec4 } from "gl-matrix";
-import { projection } from "gl-matrix/src/gl-matrix/mat3";
 import { GameObject } from "./GameObject";
 import { GameComponentContext, SceneRenderContext } from "./interfaces";
-import {
-	GlAccessorType,
-	GlBufferAndView,
-	ProgramInfo,
-} from "./webgl/interfaces";
+import { GlAccessorType, ProgramInfo } from "./webgl/interfaces";
 import {
 	createBufferFromTypedArray,
 	numberOfComponentsForType,
@@ -42,10 +37,12 @@ export class ParticleEmitter extends GameObject {
 	private _positionArray!: Float32Array;
 	private _sizeArray!: Float32Array;
 	private _colorArray!: Float32Array;
+	private _lifeArray!: Float32Array;
 
 	private _positionBuffer: WebGLBuffer | undefined;
 	private _sizeBuffer: WebGLBuffer | undefined;
 	private _colorBuffer: WebGLBuffer | undefined;
+	private _lifeBuffer: WebGLBuffer | undefined;
 
 	private _particleTimer = 0;
 
@@ -62,18 +59,30 @@ export class ParticleEmitter extends GameObject {
 		this._positionArray = new Float32Array(maxParticles * 3);
 		this._sizeArray = new Float32Array(maxParticles);
 		this._colorArray = new Float32Array(maxParticles * 4);
+		this._lifeArray = new Float32Array(maxParticles);
 	}
 
 	render(context: SceneRenderContext) {
 		const gl = context.gl;
 
-		if (!this._positionBuffer || !this._sizeBuffer || !this._colorBuffer) {
+		if (context.phase !== 'alpha') {
+			context.addToRenderPhase('alpha', this);
+			return;
+		}
+
+		if (
+			!this._positionBuffer ||
+			!this._sizeBuffer ||
+			!this._colorBuffer ||
+			!this._lifeBuffer
+		) {
 			this._positionBuffer = createBufferFromTypedArray(
 				gl,
 				new Float32Array(0)
 			);
 			this._sizeBuffer = createBufferFromTypedArray(gl, new Float32Array(0));
 			this._colorBuffer = createBufferFromTypedArray(gl, new Float32Array(0));
+			this._lifeBuffer = createBufferFromTypedArray(gl, new Float32Array(0));
 		}
 
 		gl.useProgram(this.particleProgramInfo.program);
@@ -101,11 +110,15 @@ export class ParticleEmitter extends GameObject {
 			this._colorArray[i * 4 + 1] = this.particles[i].color[1];
 			this._colorArray[i * 4 + 2] = this.particles[i].color[2];
 			this._colorArray[i * 4 + 3] = this.particles[i].color[3];
+
+			this._lifeArray[i] =
+				this.particles[i].lifeElapsed / this.particles[i].life;
 		}
 
 		updateBuffer(gl, this._positionBuffer, this._positionArray);
 		updateBuffer(gl, this._sizeBuffer, this._sizeArray);
 		updateBuffer(gl, this._colorBuffer, this._colorArray);
+		updateBuffer(gl, this._lifeBuffer, this._lifeArray);
 
 		setBuffersAndAttributes(gl, this.particleProgramInfo, {
 			attribs: {
@@ -139,10 +152,22 @@ export class ParticleEmitter extends GameObject {
 					offset: 0,
 					componentType: gl.FLOAT,
 				},
+				a_life: {
+					buffer: this._lifeBuffer,
+					numItems: this.particles.length,
+					itemSize: numberOfComponentsForType(GlAccessorType.SCALAR),
+					type: gl.STATIC_DRAW,
+					normalize: false,
+					stride: 0,
+					offset: 0,
+					componentType: gl.FLOAT,
+				}
 			},
 		});
 
+		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 		gl.drawArrays(gl.POINTS, 0, this.particles.length);
+		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 	}
 
 	update(context: GameComponentContext) {
@@ -164,12 +189,12 @@ export class ParticleEmitter extends GameObject {
 			});
 		}
 
-        const deletion: Particle[] = [];
-        
-        const delta = vec3.create();
+		const deletion: Particle[] = [];
+
+		const delta = vec3.create();
 
 		this.particles.forEach((particle) => {
-            vec3.scale(delta, particle.velocity, context.deltaInSeconds);
+			vec3.scale(delta, particle.velocity, context.deltaInSeconds);
 			vec3.add(particle.position, particle.position, delta);
 			particle.lifeElapsed += context.deltaInSeconds;
 
