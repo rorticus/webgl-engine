@@ -19,8 +19,48 @@ export interface Particle {
 	velocity: vec3;
 }
 
+export interface EmitModel {
+	(): [position: vec3, velocity: vec3];
+}
+
 function randBetween(a: number, b: number) {
 	return a + Math.random() * (b - a);
+}
+
+export function createConicalEmitter(originRadius: number, dispersalRadius: number) {
+	const origin = vec3.create();
+
+	return () => {
+
+		// start point
+		const startDist = randBetween(0, originRadius);
+		const startAngle = randBetween(0, 360);
+
+		const start = vec3.fromValues(
+			startDist, 
+			0, 
+			0);
+		vec3.rotateY(start, start, origin, startAngle * Math.PI / 180);
+		
+		// end
+		const endDist = randBetween(0, dispersalRadius);
+		const endAngle = randBetween(0, 360);
+
+		const end = vec3.fromValues(
+			endDist, 
+			1,
+			0);
+		vec3.rotateY(end, end, origin, endAngle * Math.PI / 180);
+
+		const velocity = vec3.create();
+		vec3.subtract(velocity, end, start);
+		vec3.normalize(velocity, velocity);
+
+		return [
+			start,
+			velocity
+		] as [position: vec3, velocity: vec3];
+	};
 }
 
 export class ParticleEmitter extends GameObject {
@@ -44,11 +84,14 @@ export class ParticleEmitter extends GameObject {
 	private _colorBuffer: WebGLBuffer | undefined;
 	private _lifeBuffer: WebGLBuffer | undefined;
 
+	emitModel: EmitModel;
+
 	private _particleTimer = 0;
 
 	constructor(programInfo: ProgramInfo) {
 		super();
 		this.particleProgramInfo = programInfo;
+		this.emitModel = createConicalEmitter(0.1, 0.2);
 
 		this.generateBuffers();
 	}
@@ -165,7 +208,7 @@ export class ParticleEmitter extends GameObject {
 			},
 		});
 
-		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+		gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 		gl.drawArrays(gl.POINTS, 0, this.particles.length);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 	}
@@ -179,13 +222,15 @@ export class ParticleEmitter extends GameObject {
 		while (this._particleTimer > perSec) {
 			this._particleTimer -= perSec;
 
+			const props = this.emitModel();
+
 			this.particles.push({
-				position: vec3.fromValues(0, 0, 0),
+				position: props[0],
 				size: randBetween(this._particleSizeMin, this._particleSizeMax),
 				life: randBetween(this._particleLifeMin, this._particleLifeMax),
 				color: vec4.fromValues(1, 1, 1, 1),
 				lifeElapsed: 0,
-				velocity: vec3.fromValues(randBetween(-1, 1), 1, 0),
+				velocity: props[1],
 			});
 		}
 
