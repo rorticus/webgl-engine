@@ -9,6 +9,7 @@ uniform mat4 u_projectionMatrix;
 uniform float u_heightOfNearPlane;
 
 varying float v_life;
+varying vec4 v_color;
 
 void main() {
     vec4 position = u_projectionMatrix * u_matrix * vec4(a_position, 1.0);
@@ -16,6 +17,7 @@ void main() {
     gl_Position = position;
     gl_PointSize = (u_heightOfNearPlane * a_size) / position.w;
     v_life = a_life;
+    v_color = a_color;
 }
 `;
 
@@ -23,6 +25,10 @@ export const fragmentShader = `
 precision mediump float;
 
 varying float v_life;
+varying vec4 v_color;
+
+uniform sampler2D u_texture;
+uniform bool u_hasTexture;
 
 void main() {
     vec2 cxy = 2.0 * gl_PointCoord - 1.0;
@@ -32,6 +38,7 @@ void main() {
         discard;
     }
 
-    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0 - v_life);
+    vec4 baseColor = u_hasTexture ? texture2D(u_texture, gl_PointCoord) : vec4(1.0, 1.0, 1.0, 1.0);
+    gl_FragColor = v_color * baseColor * vec4(1.0, 1.0, 1.0, (1.0 - v_life) * (1.0 - r));
 }
 `;

@@ -3,11 +3,15 @@ import { Scene } from "../../../src/Scene";
 import { vec3 } from "gl-matrix";
 import { OrbitCamera } from "../../../src/cameras/OrbitCamera";
 import { GameObject } from "../../../src/GameObject";
-import { createAttributesFromArrays } from "../../../src/webgl/utils";
+import {
+	createAttributesFromArrays,
+	createTexture,
+	loadTextureFromSource,
+} from "../../../src/webgl/utils";
 import { loadGLB } from "../../../src/webgl/gltf";
 import { AnimationState } from "../../../src/animation/AnimationState";
 import { TranslationAnimationChannel } from "../../../src/animation/TranslationAnimationChannel";
-import { ParticleEmitter } from '../../../src/ParticleEmitter';
+import { createConicalEmitter, ParticleEmitter } from "../../../src/ParticleEmitter";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -57,6 +61,15 @@ scene.pointLights[1].position = vec3.fromValues(0, 1, -2);
 scene.pointLights[1].color = vec3.fromValues(1, 1, 1);
 
 const emitter = new ParticleEmitter(engine.programs.particle);
+
+emitter.configure({
+	color: [1, 0, 0, 1],
+	sizeMin: 0.1,
+	sizeMax: 0.1,
+	lifeMax: 5,
+	particlesPerSecond: 1000
+});
+emitter.emitModel = createConicalEmitter(0.1, 0.25, 1, 1.25);
 
 scene.addGameObject(emitter);
 

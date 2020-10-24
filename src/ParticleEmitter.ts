@@ -20,46 +20,49 @@ export interface Particle {
 }
 
 export interface EmitModel {
-	(): [position: vec3, velocity: vec3];
+	(): {
+		position: vec3;
+		velocity: vec3;
+	};
 }
 
 function randBetween(a: number, b: number) {
 	return a + Math.random() * (b - a);
 }
 
-export function createConicalEmitter(originRadius: number, dispersalRadius: number) {
+export function createConicalEmitter(
+	originRadius: number,
+	dispersalRadius: number,
+	vMin = 1,
+	vMax = 1
+) {
 	const origin = vec3.create();
 
 	return () => {
-
 		// start point
 		const startDist = randBetween(0, originRadius);
 		const startAngle = randBetween(0, 360);
 
-		const start = vec3.fromValues(
-			startDist, 
-			0, 
-			0);
-		vec3.rotateY(start, start, origin, startAngle * Math.PI / 180);
-		
+		const start = vec3.fromValues(startDist, 0, 0);
+		vec3.rotateY(start, start, origin, (startAngle * Math.PI) / 180);
+
 		// end
 		const endDist = randBetween(0, dispersalRadius);
 		const endAngle = randBetween(0, 360);
 
-		const end = vec3.fromValues(
-			endDist, 
-			1,
-			0);
-		vec3.rotateY(end, end, origin, endAngle * Math.PI / 180);
+		const end = vec3.fromValues(endDist, 1, 0);
+		vec3.rotateY(end, end, origin, (endAngle * Math.PI) / 180);
 
 		const velocity = vec3.create();
 		vec3.subtract(velocity, end, start);
 		vec3.normalize(velocity, velocity);
 
-		return [
-			start,
-			velocity
-		] as [position: vec3, velocity: vec3];
+		vec3.scale(velocity, velocity, randBetween(vMin, vMax));
+
+		return {
+			position: start,
+			velocity,
+		};
 	};
 }
 
@@ -72,6 +75,7 @@ export class ParticleEmitter extends GameObject {
 	private _particleLifeMax = 2;
 	private _particleSizeMin = 0.1;
 	private _particleSizeMax = 0.2;
+	private _color = vec4.fromValues(1, 1, 1, 1);
 	private _gravity = vec3.fromValues(0, -1, 0);
 
 	private _positionArray!: Float32Array;
@@ -85,13 +89,49 @@ export class ParticleEmitter extends GameObject {
 	private _lifeBuffer: WebGLBuffer | undefined;
 
 	emitModel: EmitModel;
+	texture: WebGLTexture | null = null;
 
 	private _particleTimer = 0;
 
 	constructor(programInfo: ProgramInfo) {
 		super();
 		this.particleProgramInfo = programInfo;
-		this.emitModel = createConicalEmitter(0.1, 0.2);
+		this.emitModel = createConicalEmitter(0.1, 0.5);
+
+		this.generateBuffers();
+	}
+
+	configure(properties: {
+		particlesPerSecond?: number;
+		lifeMin?: number;
+		lifeMax?: number;
+		sizeMin?: number;
+		sizeMax?: number;
+		color?: [number, number, number, number];
+	}) {
+		if (properties.particlesPerSecond) {
+			this._particlesPerSecond = properties.particlesPerSecond;
+		}
+
+		if (properties.lifeMin) {
+			this._particleLifeMin = properties.lifeMin;
+		}
+
+		if (properties.lifeMax) {
+			this._particleLifeMax = properties.lifeMax;
+		}
+
+		if (properties.sizeMin) {
+			this._particleSizeMin = properties.sizeMin;
+		}
+
+		if (properties.sizeMax) {
+			this._particleSizeMax = properties.sizeMax;
+		}
+
+		if (properties.color) {
+			this._color = vec4.fromValues(...properties.color);
+		}
 
 		this.generateBuffers();
 	}
@@ -108,8 +148,8 @@ export class ParticleEmitter extends GameObject {
 	render(context: SceneRenderContext) {
 		const gl = context.gl;
 
-		if (context.phase !== 'alpha') {
-			context.addToRenderPhase('alpha', this);
+		if (context.phase !== "alpha") {
+			context.addToRenderPhase("alpha", this);
 			return;
 		}
 
@@ -140,6 +180,8 @@ export class ParticleEmitter extends GameObject {
 			u_projectionMatrix: context.projectionMatrix,
 			u_matrix: this.worldMatrix,
 			u_heightOfNearPlane: heightOfNearPlane,
+			u_hasTexture: this.texture ? true : false,
+			u_texture: this.texture,
 		});
 
 		for (let i = 0; i < this.particles.length; i++) {
@@ -204,7 +246,7 @@ export class ParticleEmitter extends GameObject {
 					stride: 0,
 					offset: 0,
 					componentType: gl.FLOAT,
-				}
+				},
 			},
 		});
 
@@ -225,12 +267,12 @@ export class ParticleEmitter extends GameObject {
 			const props = this.emitModel();
 
 			this.particles.push({
-				position: props[0],
+				position: props.position,
 				size: randBetween(this._particleSizeMin, this._particleSizeMax),
 				life: randBetween(this._particleLifeMin, this._particleLifeMax),
-				color: vec4.fromValues(1, 1, 1, 1),
+				color: this._color,
 				lifeElapsed: 0,
-				velocity: props[1],
+				velocity: props.velocity,
 			});
 		}
 
