@@ -42,6 +42,8 @@ export class Engine {
 	private _scene: Scene;
 	private _gl: WebGLRenderingContext;
 
+	fpsUpdated?: (fps: number) => void;
+
 	programs: Programs;
 
 	mouseService: MouseService;
@@ -69,7 +71,7 @@ export class Engine {
 		for (let i = 0; i < names.length; i++) {
 			try {
 				gl = canvas.getContext(names[i], {
-					premultipliedAlpha: false
+					premultipliedAlpha: false,
 				}) as WebGLRenderingContext;
 				break;
 			} catch (e) {}
@@ -90,7 +92,11 @@ export class Engine {
 			standard: createProgram(gl, standardVertexShader, standardFragmentShader),
 			skybox: createProgram(gl, skyboxVertexShader, skyboxFragmentShader),
 			sprite: createProgram(gl, spriteVertexShader, spriteFragmentShader),
-			particle: createProgram(gl, particlesVertexShader, particlesFragmentShader)
+			particle: createProgram(
+				gl,
+				particlesVertexShader,
+				particlesFragmentShader
+			),
 		};
 
 		this._gl = gl;
@@ -103,6 +109,8 @@ export class Engine {
 		this.mouseService = new MouseService(canvas);
 		this.keyboardService = new KeyboardService();
 
+		let elapsedTime = 0;
+		let frameCount = 0;
 		const frame = () => {
 			const now = Date.now();
 			const dt = Math.min(1, (now - this._lastFrameTime) / 1000);
@@ -115,7 +123,16 @@ export class Engine {
 
 			this.render();
 
+			frameCount++;
 			this._lastFrameTime = now;
+
+			elapsedTime += dt;
+
+			if (elapsedTime > 1) {
+				this.fpsUpdated && this.fpsUpdated(frameCount);
+				frameCount = 0;
+				elapsedTime -= 1;
+			}
 
 			requestAnimationFrame(frame);
 		};

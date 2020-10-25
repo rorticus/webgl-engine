@@ -13,7 +13,7 @@ import {
 	nativeArrayFromAccessor,
 	numberOfComponentsForType,
 } from "./utils";
-import { mat4, quat, vec3 } from "gl-matrix";
+import { mat4, quat, vec3, vec4 } from "gl-matrix";
 import { GameObject } from "../GameObject";
 import { Skin } from "./Skin";
 import { AnimationState, AnimationWrapMode } from "../animation/AnimationState";
@@ -287,7 +287,7 @@ export function loadGLTF(
 										bufferViews
 								  )
 								: {
-										u_color: vec3.fromValues(1.0, 0.0, 0.0),
+										u_color: vec4.fromValues(1.0, 0.0, 0.0, 1.0),
 								  },
 					})),
 				};
