@@ -50,7 +50,7 @@ frame();
 orbitCamera.radius = 5;
 orbitCamera.elevation = 5;
 orbitCamera.azimuth = (45 * Math.PI) / 180;
-orbitCamera.lookAt = vec3.fromValues(0, 0, 0);
+orbitCamera.lookAt = vec3.fromValues(0, 2, 0);
 
 const scene = new Scene();
 scene.camera = orbitCamera;
@@ -60,18 +60,8 @@ scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
 scene.pointLights[1].position = vec3.fromValues(0, 1, -2);
 scene.pointLights[1].color = vec3.fromValues(1, 1, 1);
 
-const emitter = new ParticleEmitter(engine.programs.particle);
-
-emitter.configure({
-	color: [1, 0, 0, 1],
-	sizeMin: 0.1,
-	sizeMax: 0.1,
-	lifeMax: 5,
-	particlesPerSecond: 1000
-});
-emitter.emitModel = createConicalEmitter(0.1, 0.25, 1, 1.25);
-
-scene.addGameObject(emitter);
+const model = loadGLB(engine.gl, engine.programs.standard, require('./character1.glb'));
+scene.addGameObject(model);
 
 engine.scene = scene;
 engine.start();

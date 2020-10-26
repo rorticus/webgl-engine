@@ -112,6 +112,7 @@ export class Scene {
 			u_ambientColor: this.ambientColor,
 			pointLights: this.pointLights,
 			phase: "standard" as const,
+			u_cameraPos: this.camera.position
 		};
 
 		this._layers.forEach((layer, index) => {

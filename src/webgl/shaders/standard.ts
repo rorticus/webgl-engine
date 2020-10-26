@@ -68,6 +68,9 @@ uniform vec3 u_ambientColor;
 uniform sampler2D u_texture0;
 uniform bool u_hasTexture;
 uniform int u_blendMode;
+uniform vec4 u_outlineColor;
+uniform bool u_hasOutline;
+uniform vec3 u_cameraPos;
 
 const int NUM_POSITIONAL_LIGHTS = 2;
 
@@ -110,7 +113,14 @@ void main() {
 	vec3 normal = normalize(v_normal);
 		
 	vec4 iColor = vec4(calculateAmbientColor(), 0.0) + calculatePositionalLights(normal);
-				
+        
+  if(u_hasOutline) {
+    vec3 toCam = normalize(u_cameraPos - v_position);
+    float rimAmount = 1.0 - max(0.0, dot(normal, toCam));
+    rimAmount = pow(rimAmount, 2.0);
+
+    iColor = iColor + u_outlineColor * rimAmount;
+  }
   gl_FragColor = iColor;
 }
 `;

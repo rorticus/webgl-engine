@@ -1,4 +1,4 @@
-import { mat3, mat4, quat, vec3 } from "gl-matrix";
+import { mat3, mat4, quat, vec3, vec4 } from "gl-matrix";
 import { setBuffersAndAttributes, setUniforms } from "./webgl/utils";
 import { Renderable } from "./webgl/interfaces";
 import {
@@ -238,6 +238,7 @@ export class GameObject {
 				u_lightWorldPosition: pointLights.map((light) => light.position),
 				u_lightWorldColor: pointLights.map((light) => light.color),
 				u_useSkinning: false,
+				u_cameraPos: context.u_cameraPos
 			});
 
 			if (this.renderable.skin) {

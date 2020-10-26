@@ -11,8 +11,10 @@ export interface SceneRenderContext {
     projectionMatrix: mat4;
     // TODO: Rename this to something that doesn't have a u_ in front of it..
     u_ambientColor: vec3;
+    u_cameraPos: vec3;
     pointLights: Light[];
     phase: RenderPhase;
+
     addToRenderPhase: (phase: RenderPhase, go: GameObject) => void;
 }
 
