@@ -121,6 +121,7 @@ void main() {
 
     iColor = iColor + u_outlineColor * rimAmount;
   }
+  
   gl_FragColor = iColor;
 }
 `;

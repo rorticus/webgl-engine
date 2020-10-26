@@ -27,3 +27,7 @@ export interface GameComponent {
     tag?: string;
     update: (context: GameComponentContext, gameObject: GameObject) => void;
 }
+
+export interface MaterialInstance {
+    getUniforms(): { [key: string]: any; }
+}

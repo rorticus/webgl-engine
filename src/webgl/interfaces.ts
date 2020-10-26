@@ -1,4 +1,5 @@
 import { GameObject } from "../GameObject";
+import { MaterialInstance } from "../interfaces";
 
 export interface UniformSetter {
 	setter: (v: any) => void;
@@ -45,6 +46,7 @@ export interface Renderable {
 	programInfo: ProgramInfo;
 	skin?: RenderableSkin;
 	renderables: SingleRenderable[];
+	materialInstance?: MaterialInstance;
 }
 
 export interface GlBufferAndView {

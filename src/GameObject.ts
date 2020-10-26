@@ -238,7 +238,7 @@ export class GameObject {
 				u_lightWorldPosition: pointLights.map((light) => light.position),
 				u_lightWorldColor: pointLights.map((light) => light.color),
 				u_useSkinning: false,
-				u_cameraPos: context.u_cameraPos
+				u_cameraPos: context.u_cameraPos,
 			});
 
 			if (this.renderable.skin) {
@@ -249,6 +249,13 @@ export class GameObject {
 					u_numJoints: this.renderable.skin.joints.length,
 					u_useSkinning: true,
 				});
+			}
+
+			if (this.renderable.materialInstance) {
+				setUniforms(
+					this.renderable.programInfo,
+					this.renderable.materialInstance.getUniforms()
+				);
 			}
 
 			this.renderable.renderables.forEach((renderable) => {

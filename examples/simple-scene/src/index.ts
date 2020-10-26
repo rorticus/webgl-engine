@@ -1,6 +1,6 @@
 import { Engine } from "../../../src/Engine";
 import { Scene } from "../../../src/Scene";
-import { vec3 } from "gl-matrix";
+import { vec3, vec4 } from "gl-matrix";
 import { OrbitCamera } from "../../../src/cameras/OrbitCamera";
 import { GameObject } from "../../../src/GameObject";
 import {
@@ -11,7 +11,11 @@ import {
 import { loadGLB } from "../../../src/webgl/gltf";
 import { AnimationState } from "../../../src/animation/AnimationState";
 import { TranslationAnimationChannel } from "../../../src/animation/TranslationAnimationChannel";
-import { createConicalEmitter, ParticleEmitter } from "../../../src/ParticleEmitter";
+import {
+	createConicalEmitter,
+	ParticleEmitter,
+} from "../../../src/ParticleEmitter";
+import { StandardMaterialInstance } from "../../../src/StandardMaterialInstance";
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -60,7 +64,14 @@ scene.pointLights[0].color = vec3.fromValues(1, 1, 1);
 scene.pointLights[1].position = vec3.fromValues(0, 1, -2);
 scene.pointLights[1].color = vec3.fromValues(1, 1, 1);
 
-const model = loadGLB(engine.gl, engine.programs.standard, require('./character1.glb'));
+const model = loadGLB(
+	engine.gl,
+	engine.programs.standard,
+	require("./character1.glb")
+);
+const params = new StandardMaterialInstance();
+params.outlineColor = vec4.fromValues(0, 0, 1, 0);
+model.children[0].children[0].renderable.materialInstance = params;
 scene.addGameObject(model);
 
 engine.scene = scene;
