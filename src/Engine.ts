@@ -42,6 +42,8 @@ export class Engine {
 	private _scene: Scene;
 	private _gl: WebGLRenderingContext;
 
+	backgroundColor = [0, 0, 0];
+
 	fpsUpdated?: (fps: number) => void;
 
 	programs: Programs;
@@ -170,7 +172,7 @@ export class Engine {
 
 		const gl = this._gl;
 
-		gl.clearColor(0, 0, 0, 1);
+		gl.clearColor(this.backgroundColor[0], this.backgroundColor[1], this.backgroundColor[2], 1);
 		gl.enable(gl.DEPTH_TEST);
 		gl.viewport(0, 0, viewportWidth, viewportHeight);
 
