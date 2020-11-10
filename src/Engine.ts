@@ -25,6 +25,7 @@ import {
 } from "./webgl/shaders/particles";
 
 import { KeyboardService } from "./services/KeyboardService";
+import { StandardMaterialInstance } from "./StandardMaterialInstance";
 
 interface Programs {
 	standard: ProgramInfo;
@@ -91,7 +92,7 @@ export class Engine {
 		gl.getExtension("OES_element_index_uint");
 
 		this.programs = {
-			standard: createProgram(gl, standardVertexShader, standardFragmentShader),
+			standard: createProgram(gl, standardVertexShader, standardFragmentShader, new StandardMaterialInstance()),
 			skybox: createProgram(gl, skyboxVertexShader, skyboxFragmentShader),
 			sprite: createProgram(gl, spriteVertexShader, spriteFragmentShader),
 			particle: createProgram(

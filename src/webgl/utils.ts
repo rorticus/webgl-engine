@@ -14,6 +14,7 @@ import { GameObject } from "../GameObject";
 import { quad } from "./primitives";
 import { Engine } from "../Engine";
 import { vec3 } from "gl-matrix";
+import { MaterialInstance } from "../interfaces";
 
 function isBuiltIn(info: WebGLActiveInfo) {
 	const name = info.name;
@@ -228,7 +229,8 @@ export function createAttributeSetters(
 
 export function createProgramInfoFromProgram(
 	gl: WebGLRenderingContext,
-	program: WebGLProgram
+	program: WebGLProgram,
+	defaultInstanceParams?: MaterialInstance
 ): ProgramInfo {
 	gl.useProgram(program);
 
@@ -236,6 +238,7 @@ export function createProgramInfoFromProgram(
 		program,
 		uniformSetters: createUniformSetters(gl, program),
 		attribSetters: createAttributeSetters(gl, program),
+		defaultInstanceParams
 	};
 }
 

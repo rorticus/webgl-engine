@@ -256,6 +256,11 @@ export class GameObject {
 					this.renderable.programInfo,
 					this.renderable.materialInstance.getUniforms()
 				);
+			} else if (this.renderable.programInfo.defaultInstanceParams) {
+				setUniforms(
+					this.renderable.programInfo,
+					this.renderable.programInfo.defaultInstanceParams.getUniforms()
+				);
 			}
 
 			this.renderable.renderables.forEach((renderable) => {

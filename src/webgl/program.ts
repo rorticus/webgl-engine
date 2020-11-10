@@ -1,3 +1,4 @@
+import { MaterialInstance } from "../interfaces";
 import { ProgramInfo } from "./interfaces";
 import { createProgramInfoFromProgram } from "./utils";
 
@@ -23,7 +24,8 @@ function createShader(gl: WebGLRenderingContext, type: GLenum, source: string) {
 export function createProgram(
 	gl: WebGLRenderingContext,
 	vertexShaderSource: string,
-	fragmentShaderSource: string
+	fragmentShaderSource: string,
+	defaultInstanceParams?: MaterialInstance
 ): ProgramInfo {
 	const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
 	const fragmentShader = createShader(
@@ -40,5 +42,5 @@ export function createProgram(
 	gl.attachShader(program, fragmentShader);
 	gl.linkProgram(program);
 
-	return createProgramInfoFromProgram(gl, program);
+	return createProgramInfoFromProgram(gl, program, defaultInstanceParams);
 }

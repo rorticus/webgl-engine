@@ -17,6 +17,7 @@ export interface ProgramInfo {
 	program: WebGLProgram;
 	uniformSetters: Record<string, UniformSetter>;
 	attribSetters: Record<string, AttribSetter>;
+	defaultInstanceParams?: MaterialInstance;
 }
 
 export interface GlTexture {
