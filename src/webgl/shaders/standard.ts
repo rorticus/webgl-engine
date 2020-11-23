@@ -93,7 +93,7 @@ vec4 calculatePositionalLights(vec3 normal) {
 		
 		if(u_hasTexture) {
       if(u_blendMode == 0) {
-        diffuse += vec4(u_lightWorldColor[i], 1) * vec4(texture2D(u_texture0, v_texcoord0).xyz, 1.0) * light;
+        diffuse += vec4(u_lightWorldColor[i] * texture2D(u_texture0, v_texcoord0).xyz * light, 1.0);
       } else if (u_blendMode == 1) {
         diffuse += vec4(u_lightWorldColor[i], 1) * texture2D(u_texture0, v_texcoord0) * light;
       }
