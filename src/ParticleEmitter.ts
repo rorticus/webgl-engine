@@ -153,6 +153,11 @@ export class ParticleEmitter extends GameObject {
 			return;
 		}
 
+		// update hasn't run yet
+		if (!this.worldMatrix) {
+			return;
+		}
+
 		if (
 			!this._positionBuffer ||
 			!this._sizeBuffer ||

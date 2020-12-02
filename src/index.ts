@@ -4,6 +4,7 @@ export * from './Camera';
 export * from './GameObject';
 export * from './Light';
 export * from './Scene';
+export  * from './ParticleEmitter';
 
 // services
 export * from './services/MouseService';
