@@ -26,6 +26,7 @@ import {
 
 import { KeyboardService } from "./services/KeyboardService";
 import { StandardMaterialInstance } from "./StandardMaterialInstance";
+import { SoundService } from "./SoundService";
 
 interface Programs {
 	standard: ProgramInfo;
@@ -51,6 +52,7 @@ export class Engine {
 
 	mouseService: MouseService;
 	keyboardService: KeyboardService;
+	soundService: SoundService;
 
 	get gl() {
 		return this._gl;
@@ -92,7 +94,12 @@ export class Engine {
 		gl.getExtension("OES_element_index_uint");
 
 		this.programs = {
-			standard: createProgram(gl, standardVertexShader, standardFragmentShader, new StandardMaterialInstance()),
+			standard: createProgram(
+				gl,
+				standardVertexShader,
+				standardFragmentShader,
+				new StandardMaterialInstance()
+			),
 			skybox: createProgram(gl, skyboxVertexShader, skyboxFragmentShader),
 			sprite: createProgram(gl, spriteVertexShader, spriteFragmentShader),
 			particle: createProgram(
@@ -111,6 +118,7 @@ export class Engine {
 
 		this.mouseService = new MouseService(canvas);
 		this.keyboardService = new KeyboardService();
+		this.soundService = new SoundService();
 
 		let elapsedTime = 0;
 		let frameCount = 0;
@@ -173,7 +181,12 @@ export class Engine {
 
 		const gl = this._gl;
 
-		gl.clearColor(this.backgroundColor[0], this.backgroundColor[1], this.backgroundColor[2], 1);
+		gl.clearColor(
+			this.backgroundColor[0],
+			this.backgroundColor[1],
+			this.backgroundColor[2],
+			1
+		);
 		gl.enable(gl.DEPTH_TEST);
 		gl.viewport(0, 0, viewportWidth, viewportHeight);
 
