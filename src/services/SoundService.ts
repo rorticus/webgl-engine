@@ -11,10 +11,7 @@ export class SoundService {
 	private _gainNode?: GainNode;
 	private _soundEffects: Record<string, AudioBuffer> = {};
 
-	/**
-	 * The AudioContext must be created as a result of a user event in order to be created successfully.
-	 */
-	async initialize({ defaultGain = 0.25 }: SoundOptions = {}) {
+	constructor({ defaultGain = 1 }: SoundOptions = {}) {
 		this._audioContext = new (window.webkitAudioContext || AudioContext)();
 		if (this._audioContext) {
 			this._gainNode = this._audioContext?.createGain();
@@ -22,7 +19,13 @@ export class SoundService {
 				this._gainNode.gain.value = defaultGain;
 				this._gainNode?.connect(this._audioContext.destination);
 			}
+
+			this._audioContext?.addEventListener('statechange', () => console.log(this._audioContext?.state));
 		}
+	}
+
+	resume() {
+		this._audioContext?.resume();
 	}
 
 	private _loadBuffer(buffer: ArrayBuffer): Promise<AudioBuffer> {

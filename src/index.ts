@@ -8,6 +8,7 @@ export  * from './ParticleEmitter';
 
 // services
 export * from './services/MouseService';
+export * from './services/SoundService';
 
 // cameras
 export * from './cameras/OrbitCamera';
@@ -22,3 +23,6 @@ export * from './animation/TranslationAnimationChannel';
 // models
 export * from './webgl/gltf';
 export * from './webgl/Skin';
+
+// components
+export * from './SoundComponent';

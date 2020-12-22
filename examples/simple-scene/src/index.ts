@@ -17,6 +17,9 @@ import {
 } from "../../../src/ParticleEmitter";
 import { StandardMaterialInstance } from "../../../src/StandardMaterialInstance";
 import { Camera } from "../../../src/Camera";
+import { SoundComponent } from '../../../src/SoundComponent';
+
+const soundSource = require('./test.m4a');
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -76,3 +79,15 @@ scene.addGameObject(model);
 
 engine.scene = scene;
 engine.start();
+
+engine.soundService.loadSoundEffect('test', soundSource);
+
+document.body.addEventListener('click', () => {
+	engine.soundService.resume();
+
+	const go = new GameObject();
+	const s = new SoundComponent();
+	s.resource = 'test';
+	go.addComponent(s);
+	scene.addGameObject(go);
+});

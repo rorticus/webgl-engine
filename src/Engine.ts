@@ -1,32 +1,28 @@
-import { GameObject } from "./GameObject";
 import { Scene } from "./Scene";
+import { KeyboardService } from "./services/KeyboardService";
 import { MouseService } from "./services/MouseService";
+import { SoundService } from "./services/SoundService";
+import { StandardMaterialInstance } from "./StandardMaterialInstance";
 import { ProgramInfo } from "./webgl/interfaces";
 import { createProgram } from "./webgl/program";
-
+import {
+	fragmentShader as particlesFragmentShader, vertexShader as particlesVertexShader
+} from "./webgl/shaders/particles";
+import {
+	fragmentShader as skyboxFragmentShader, vertexShader as skyboxVertexShader
+} from "./webgl/shaders/skybox";
+import {
+	fragmentShader as spriteFragmentShader, vertexShader as spriteVertexShader
+} from "./webgl/shaders/sprite";
 import {
 	fragmentShader as standardFragmentShader,
-	vertexShader as standardVertexShader,
+	vertexShader as standardVertexShader
 } from "./webgl/shaders/standard";
 
-import {
-	vertexShader as skyboxVertexShader,
-	fragmentShader as skyboxFragmentShader,
-} from "./webgl/shaders/skybox";
 
-import {
-	vertexShader as spriteVertexShader,
-	fragmentShader as spriteFragmentShader,
-} from "./webgl/shaders/sprite";
 
-import {
-	vertexShader as particlesVertexShader,
-	fragmentShader as particlesFragmentShader,
-} from "./webgl/shaders/particles";
 
-import { KeyboardService } from "./services/KeyboardService";
-import { StandardMaterialInstance } from "./StandardMaterialInstance";
-import { SoundService } from "./SoundService";
+
 
 interface Programs {
 	standard: ProgramInfo;

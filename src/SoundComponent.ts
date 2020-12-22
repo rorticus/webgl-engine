@@ -14,8 +14,8 @@ export class SoundComponent implements GameComponent {
 			this.shouldStart = true;
 		}
 
-		if (!this.shouldStart && !this.started) {
-			this.started = true;
+		if (this.shouldStart && !this.started) {
+            this.started = true;
 			context.engine.soundService.start(this.resource, () => {
 				if (this.autoRemove) {
 					gameObject.removeFromParent();
