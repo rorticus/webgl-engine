@@ -1,4 +1,5 @@
 import { GameComponentContext } from "../interfaces";
+import { AnimationAction } from "./AnimationAction";
 import { AnimationChannel } from "./AnimationChannel";
 
 export enum AnimationWrapMode {
@@ -11,6 +12,7 @@ export class AnimationState {
 	time: number = 0;
 	totalTime: number = 0;
 	channels: AnimationChannel[] = [];
+	actions: AnimationAction[] = [];
 	wrapMode: AnimationWrapMode = AnimationWrapMode.None;
 	duration: number = 0;
 	timeScale = 1;
@@ -27,10 +29,11 @@ export class AnimationState {
 		this.totalTime += context.deltaInSeconds;
 
 		if (this.duration === 0) {
-			this.duration =
-				Math.max(...this.channels.map((channel) => channel.getDuration()));
+			this.duration = Math.max(
+				...this.channels.map((channel) => channel.getDuration())
+			);
 		}
-		
+
 		if (this.time > this.duration) {
 			if (this.wrapMode === AnimationWrapMode.None) {
 				return;
@@ -53,5 +56,7 @@ export class AnimationState {
 			const value = channel.getValue(this.time);
 			channel.apply(value, weight);
 		});
+
+		this.actions.forEach((action) => action.process(this.time));
 	}
 }

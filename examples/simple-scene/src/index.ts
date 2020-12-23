@@ -17,9 +17,9 @@ import {
 } from "../../../src/ParticleEmitter";
 import { StandardMaterialInstance } from "../../../src/StandardMaterialInstance";
 import { Camera } from "../../../src/Camera";
-import { SoundComponent } from '../../../src/SoundComponent';
+import { SoundComponent } from "../../../src/SoundComponent";
 
-const soundSource = require('./test.m4a');
+const stepSound = require("./step.mp3");
 
 const canvas = document.createElement("canvas");
 canvas.setAttribute("width", "512");
@@ -28,6 +28,8 @@ canvas.setAttribute("height", "512");
 document.body.appendChild(canvas);
 
 const engine = new Engine(canvas);
+
+engine.soundService.loadSoundEffect("step", stepSound);
 
 const orbitCamera = new OrbitCamera();
 orbitCamera.position = vec3.fromValues(0, 3, 5);
@@ -57,7 +59,7 @@ function frame() {
 }
 frame();
 
-orbitCamera.radius = 5;
+orbitCamera.radius = 7;
 orbitCamera.elevation = 5;
 orbitCamera.azimuth = (45 * Math.PI) / 180;
 orbitCamera.lookAt = vec3.fromValues(0, 2, 0);
@@ -73,21 +75,24 @@ scene.pointLights[1].color = vec3.fromValues(1, 1, 1);
 const model = loadGLB(
 	engine.gl,
 	engine.programs.standard,
-	require("./explosion_cube.glb")
+	require("./cube-up-down.glb")
 );
+model.animation.initialState = "CubeAction";
+model.animation.addActions({
+	CubeAction: [
+		{
+			time: 2.2,
+			action: () => {
+				const go = new GameObject();
+				go.addComponent(new SoundComponent('step'));
+				scene.addGameObject(go);
+			},
+		},
+	],
+});
 scene.addGameObject(model);
 
 engine.scene = scene;
 engine.start();
 
-engine.soundService.loadSoundEffect('test', soundSource);
-
-document.body.addEventListener('click', () => {
-	engine.soundService.resume();
-
-	const go = new GameObject();
-	const s = new SoundComponent();
-	s.resource = 'test';
-	go.addComponent(s);
-	scene.addGameObject(go);
-});
+document.body.addEventListener('click', () => engine.soundService.resume());

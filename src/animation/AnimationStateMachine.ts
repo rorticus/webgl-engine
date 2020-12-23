@@ -1,6 +1,7 @@
 import { AnimationState, AnimationWrapMode } from "./AnimationState";
 import { GameComponentContext } from "../interfaces";
 import { GameObject } from "../GameObject";
+import { AnimationAction } from "./AnimationAction";
 
 export interface AnimationStateTransition {
 	to: string;
@@ -18,6 +19,10 @@ export interface AnimationConfiguration {
 	wrap?: AnimationWrapMode;
 	onEnter?: () => void;
 	onExit?: () => void;
+}
+
+export interface AnimationActions {
+	[animationState: string]: { time: number; action: () => void }[];
 }
 
 export class AnimationStateMachine {
@@ -155,5 +160,21 @@ export class AnimationStateMachine {
 				state.onExit = configuration.onExit;
 			}
 		}
+	}
+
+	addActions(data: AnimationActions) {
+		Object.keys(data).forEach((stateName) => {
+			const state = this.states[stateName];
+
+			if (state) {
+				data[stateName].forEach((action) => {
+					const a = new AnimationAction();
+					a.actionCallback = action.action;
+					a.t = action.time;
+
+					state.actions.push(a);
+				});
+			}
+		});
 	}
 }

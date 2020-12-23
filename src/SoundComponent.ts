@@ -9,6 +9,10 @@ export class SoundComponent implements GameComponent {
 	started = false;
 	autoRemove = true;
 
+	constructor(resource: string) {
+		this.resource = resource;
+	}
+
 	update(context: GameComponentContext, gameObject: GameObject) {
 		if (this.autoStart && !this.shouldStart && !this.started) {
 			this.shouldStart = true;
