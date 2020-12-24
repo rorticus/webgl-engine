@@ -22,7 +22,19 @@ export interface AnimationConfiguration {
 }
 
 export interface AnimationActions {
-	[animationState: string]: { time: number; action: () => void }[];
+	[animationState: string]: {
+		start: number;
+		stop: number;
+		action: () => void;
+	}[];
+}
+
+export interface AnimationSoundActions {
+	[animationState: string]: {
+		start: number;
+		stop: number;
+		sound: string | string[];
+	}[];
 }
 
 export class AnimationStateMachine {
@@ -170,7 +182,8 @@ export class AnimationStateMachine {
 				data[stateName].forEach((action) => {
 					const a = new AnimationAction();
 					a.actionCallback = action.action;
-					a.t = action.time;
+					a.start = action.start;
+					a.stop = action.stop;
 
 					state.actions.push(a);
 				});

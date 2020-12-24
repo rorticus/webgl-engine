@@ -1,4 +1,6 @@
+import { GameObject } from "../GameObject";
 import { GameComponentContext } from "../interfaces";
+import { SoundComponent } from "../SoundComponent";
 import { AnimationAction } from "./AnimationAction";
 import { AnimationChannel } from "./AnimationChannel";
 
@@ -58,5 +60,28 @@ export class AnimationState {
 		});
 
 		this.actions.forEach((action) => action.process(this.time));
+	}
+
+	addSoundAction(
+		gameObject: GameObject,
+		start: number,
+		stop: number,
+		sound: string | string[]
+	) {
+		const a = new AnimationAction();
+		a.start = start;
+		a.stop = stop;
+		a.actionCallback = () => {
+			let resource =
+				typeof sound === "string"
+					? sound
+					: sound[Math.floor(Math.random() * sound.length)];
+
+			const go = new GameObject();
+			go.addComponent(new SoundComponent(resource));
+			gameObject.add(go);
+		};
+
+		this.actions.push(a);
 	}
 }

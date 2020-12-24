@@ -78,18 +78,7 @@ const model = loadGLB(
 	require("./cube-up-down.glb")
 );
 model.animation.initialState = "CubeAction";
-model.animation.addActions({
-	CubeAction: [
-		{
-			time: 2.2,
-			action: () => {
-				const go = new GameObject();
-				go.addComponent(new SoundComponent('step'));
-				scene.addGameObject(go);
-			},
-		},
-	],
-});
+model.animation.getState('CubeAction').addSoundAction(model, 2.2, 2.2 + 0.33, 'step');
 scene.addGameObject(model);
 
 engine.scene = scene;
