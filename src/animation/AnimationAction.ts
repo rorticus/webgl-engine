@@ -6,10 +6,12 @@ export class AnimationAction {
 
 	process(t: number) {
 		if (t >= this.start && t <= this.stop) {
+			if (!this.applied) {
+				this.applied = true;
+				this.actionCallback();
+			}
+		} else {
 			this.applied = false;
-		} else if (!this.applied) {
-			this.applied = true;
-			this.actionCallback();
 		}
 	}
 }
