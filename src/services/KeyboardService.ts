@@ -4,6 +4,10 @@ export enum KeyboardKey {
 	ArrowUp = "ArrowUp",
 	ArrowDown = "ArrowDown",
 	Space = "Space",
+	A = "KeyA",
+	W = "KeyW",
+	S = "KeyS",
+	D = "KeyD",
 }
 
 export function isKeyboardKey(k: string): k is KeyboardKey {
@@ -14,6 +18,10 @@ export function isKeyboardKey(k: string): k is KeyboardKey {
 			KeyboardKey.ArrowLeft,
 			KeyboardKey.ArrowRight,
 			KeyboardKey.Space,
+			KeyboardKey.A,
+			KeyboardKey.W,
+			KeyboardKey.S,
+			KeyboardKey.D,
 		].indexOf(k as KeyboardKey) !== -1
 	) {
 		return true;
@@ -29,6 +37,10 @@ export class KeyboardService {
 		ArrowLeft: false,
 		ArrowRight: false,
 		Space: false,
+		KeyW: false,
+		KeyA: false,
+		KeyS: false,
+		KeyD: false,
 	};
 
 	press: { [key in KeyboardKey]: boolean } = {
@@ -37,12 +49,19 @@ export class KeyboardService {
 		ArrowLeft: false,
 		ArrowRight: false,
 		Space: false,
+		KeyW: false,
+		KeyA: false,
+		KeyS: false,
+		KeyD: false,
 	};
 
 	constructor() {
 		document.body.addEventListener("keydown", (event) => {
 			if (isKeyboardKey(event.code)) {
 				this.down[event.code] = true;
+
+				event.preventDefault();
+				event.stopPropagation();
 			}
 		});
 
@@ -50,6 +69,9 @@ export class KeyboardService {
 			if (isKeyboardKey(event.code)) {
 				this.press[event.code] = true;
 				this.down[event.code] = false;
+
+				event.preventDefault();
+				event.stopPropagation();
 			}
 		});
 	}

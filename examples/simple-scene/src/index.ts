@@ -1,23 +1,10 @@
-import { Engine } from "../../../src/Engine";
-import { Scene } from "../../../src/Scene";
-import { vec3, vec4 } from "gl-matrix";
+import { vec3 } from "gl-matrix";
 import { OrbitCamera } from "../../../src/cameras/OrbitCamera";
-import { GameObject } from "../../../src/GameObject";
-import {
-	createAttributesFromArrays,
-	createTexture,
-	loadTextureFromSource,
-} from "../../../src/webgl/utils";
+import { Engine } from "../../../src/Engine";
+import { GameComponentContext } from "../../../src/interfaces";
+import { Scene } from "../../../src/Scene";
+import { KeyboardKey } from "../../../src/services/KeyboardService";
 import { loadGLB } from "../../../src/webgl/gltf";
-import { AnimationState } from "../../../src/animation/AnimationState";
-import { TranslationAnimationChannel } from "../../../src/animation/TranslationAnimationChannel";
-import {
-	createConicalEmitter,
-	ParticleEmitter,
-} from "../../../src/ParticleEmitter";
-import { StandardMaterialInstance } from "../../../src/StandardMaterialInstance";
-import { Camera } from "../../../src/Camera";
-import { SoundComponent } from "../../../src/SoundComponent";
 
 const stepSound = require("./step.mp3");
 
@@ -80,6 +67,12 @@ const model = loadGLB(
 model.animation.initialState = "CubeAction";
 model.animation.getState('CubeAction').addSoundAction(model, 2.2, 2.2 + 0.33, 'step');
 scene.addGameObject(model);
+
+model.addComponent((context: GameComponentContext) => {
+	if(context.engine.keyboardService.pressed(KeyboardKey.A)) {
+		console.log('A');
+	}
+})
 
 engine.scene = scene;
 engine.start();
