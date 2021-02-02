@@ -17,8 +17,8 @@ export class MouseService {
 		});
 
 		canvas.addEventListener('pointermove', (event) => {
-		    this.pointerX = event.clientX;
-		    this.pointerY = event.clientY;
+		    this.pointerX = event.offsetX;
+		    this.pointerY = event.offsetY;
         });
 	}
 }
